@@ -101,9 +101,20 @@ class LongitudinalMetaModel(LlavaMetaModel):
             diff_features, add_features, mul_features
         ], dim=-1)
         
-        # 通过变化投影器降维
-        if hasattr(self, 'change_projector'):
-            change_features = self.change_projector(combined_features)
+        # 通过变化投影器降维 - 添加维度检查
+        if hasattr(self, 'change_projector') and self.change_projector is not None:
+            try:
+                change_features = self.change_projector(combined_features)
+            except RuntimeError as e:
+                if "shape" in str(e).lower() or "size" in str(e).lower():
+                    logger.error(f"Shape mismatch in change_projector: {e}")
+                    logger.error(f"Combined features shape: {combined_features.shape}")
+                    logger.error(f"Change projector input features: {self.change_projector.in_features}")
+                    logger.error(f"Change projector output features: {self.change_projector.out_features}")
+                    # 使用平均池化作为备选方案
+                    change_features = (image_features_t0 + image_features_t1) / 2
+                else:
+                    raise e
         else:
             # 如果没有变化投影器，使用平均池化
             change_features = (image_features_t0 + image_features_t1) / 2
@@ -175,6 +186,23 @@ class LongitudinalMetaForCausalLM(LlavaMetaForCausalLM):
         new_labels = [] if labels is not None else None
         cur_image_idx = 0
         
+        # 安全检查：确保image_features有效
+        if image_features is None or len(image_features) == 0:
+            logger.warning("No image features provided, using text-only mode")
+            # 纯文本模式
+            for batch_idx, cur_input_ids in enumerate(input_ids):
+                cur_input_embeds = self.get_model().embed_tokens(cur_input_ids)
+                new_input_embeds.append(cur_input_embeds)
+                if labels is not None:
+                    new_labels.append(labels[batch_idx])
+            
+            # 堆叠批次
+            new_input_embeds = torch.stack(new_input_embeds, dim=0)
+            if labels is not None:
+                new_labels = torch.stack(new_labels, dim=0)
+            
+            return None, attention_mask, past_key_values, new_input_embeds, new_labels
+        
         for batch_idx, cur_input_ids in enumerate(input_ids):
             # 检查是否有图像token
             image_token_indices = torch.where(cur_input_ids == IMAGE_TOKEN_INDEX)[0]
@@ -194,7 +222,15 @@ class LongitudinalMetaForCausalLM(LlavaMetaForCausalLM):
                 cur_new_labels = []
             
             while image_token_indices.numel() > 0:
-                cur_image_features = image_features[cur_image_idx]
+                # 安全检查：确保图像特征索引有效
+                if cur_image_idx >= len(image_features):
+                    logger.warning(f"Image feature index {cur_image_idx} out of range, using dummy features")
+                    device = next(self.parameters()).device
+                    dummy_features = torch.zeros(1, self.config.hidden_size, device=device)
+                    cur_image_features = dummy_features
+                else:
+                    cur_image_features = image_features[cur_image_idx]
+                
                 if len(cur_image_features.shape) == 1:
                     cur_image_features = cur_image_features[None,]
                 

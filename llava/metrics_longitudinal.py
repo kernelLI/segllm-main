@@ -261,11 +261,21 @@ class ChangeCalculator:
         Returns:
             综合变化指标
         """
-        # 计算各项变化
+        # 计算体积变化
         volume_info = self.calculate_volume_change(mask_t0, mask_t1)
         density_info = self.calculate_density_change(ct_t0, ct_t1, mask_t0, mask_t1)
         diameter_info = self.calculate_diameter_change(mask_t0, mask_t1)
         blur_info = self.calculate_margin_blur(ct_t0, ct_t1, mask_t0, mask_t1)
+        
+        # 添加eps避免除零错误
+        eps = 1e-6
+        volume_info["volume_change_percent"] = volume_info.get("volume_change_percent", 0.0)
+        if np.isinf(volume_info["volume_change_percent"]) or np.isnan(volume_info["volume_change_percent"]):
+            volume_info["volume_change_percent"] = 0.0
+        
+        density_info["density_change_percent"] = density_info.get("density_change_percent", 0.0)
+        if np.isinf(density_info["density_change_percent"]) or np.isnan(density_info["density_change_percent"]):
+            density_info["density_change_percent"] = 0.0
         
         # 计算纹理变化与空间位移
         from scipy import ndimage

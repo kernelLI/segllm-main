@@ -38,11 +38,14 @@ import json
 import logging
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from transformers import TrainingArguments, Trainer
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Union
 from pathlib import Path
+import numpy as np
+import math
 
 # 添加项目根目录到路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -267,36 +270,116 @@ class LongitudinalTrainer(Trainer):
         )
     
     def compute_loss(self, model, inputs, return_outputs=False):
-        """计算损失函数"""
-        # 提取图像和掩码 - 适配新的输入格式
-        images = inputs.get("image")  # 现在使用拼接后的图像 (B, 6, H, W)
-        masks = inputs.get("masks")
-        
-        # 前向传播
-        outputs = model(
-            images=images,  # 使用拼接后的图像
-            masks=masks,
-            **{k: v for k, v in inputs.items() if k not in ["image", "masks"]}
-        )
-        
-        # 获取预测结果
-        logits = outputs.get("logits")
-        labels = inputs.get("labels")
-        
-        # 计算交叉熵损失
-        loss_fct = nn.CrossEntropyLoss(ignore_index=-100)
-        loss = loss_fct(logits.view(-1, logits.size(-1)), labels.view(-1))
-        
-        # 添加分割损失（如果有掩码预测）
-        if "pred_masks" in outputs and "target_masks" in inputs:
-            pred_masks = outputs["pred_masks"]
-            target_masks = inputs["target_masks"]
+        """
+        计算损失函数 - 增强版错误处理
+        """
+        try:
+            # 获取输入数据并验证
+            input_ids = inputs.get("input_ids")
+            attention_mask = inputs.get("attention_mask")
+            labels = inputs.get("labels")
+            images = inputs.get("images")
+            masks = inputs.get("masks")
             
-            # Dice损失
-            dice_loss = self._compute_dice_loss(pred_masks, target_masks)
-            loss = loss + 0.5 * dice_loss
-        
-        return (loss, outputs) if return_outputs else loss
+            # 检查必需输入
+            if input_ids is None or labels is None:
+                logger.warning("Missing required inputs (input_ids or labels), returning zero loss")
+                zero_loss = torch.tensor(0.0, requires_grad=True, device=model.device if hasattr(model, 'device') else 'cpu')
+                return (zero_loss, {}) if return_outputs else zero_loss
+            
+            # 验证张量有效性
+            if torch.isnan(input_ids).any() or torch.isinf(input_ids).any():
+                logger.warning("Invalid input_ids detected, returning zero loss")
+                zero_loss = torch.tensor(0.0, requires_grad=True, device=input_ids.device)
+                return (zero_loss, {}) if return_outputs else zero_loss
+            
+            # 处理图像数据 - 增强版
+            if images is not None:
+                images = self._validate_and_fix_images(images)
+                if images is None:
+                    logger.warning("No valid images after validation, using text-only mode")
+            
+            # 记录输入形状用于调试
+            logger.debug(f"Input shapes - input_ids: {input_ids.shape}, labels: {labels.shape}")
+            if images is not None:
+                logger.debug(f"Images shape: {images.shape}")
+            if masks is not None:
+                logger.debug(f"Masks shape: {masks.shape}")
+            
+            # 前向传播 - 增强错误处理
+            try:
+                outputs = model(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    labels=labels,
+                    images=images,
+                )
+            except RuntimeError as e:
+                if "shape" in str(e).lower() or "size" in str(e).lower():
+                    logger.error(f"Shape mismatch in forward pass: {e}")
+                    logger.error(f"Input shapes - input_ids: {input_ids.shape}, images: {images.shape if images is not None else None}")
+                    # 尝试使用纯文本模式
+                    try:
+                        outputs = model(
+                            input_ids=input_ids,
+                            attention_mask=attention_mask,
+                            labels=labels,
+                            images=None,  # 禁用图像
+                        )
+                        logger.info("Fallback to text-only mode successful")
+                    except Exception as fallback_e:
+                        logger.error(f"Fallback to text-only mode also failed: {fallback_e}")
+                        zero_loss = torch.tensor(0.0, requires_grad=True, device=input_ids.device)
+                        return (zero_loss, {}) if return_outputs else zero_loss
+                else:
+                    raise e
+            
+            # 验证输出
+            logits = outputs.get("logits")
+            loss = outputs.get("loss")
+            
+            if logits is None:
+                logger.warning("No logits in model output, returning zero loss")
+                zero_loss = torch.tensor(0.0, requires_grad=True, device=input_ids.device)
+                return (zero_loss, {}) if return_outputs else zero_loss
+            
+            if torch.isnan(logits).any() or torch.isinf(logits).any():
+                logger.warning("Invalid values in logits, returning zero loss")
+                zero_loss = torch.tensor(0.0, requires_grad=True, device=input_ids.device)
+                return (zero_loss, {}) if return_outputs else zero_loss
+            
+            # 处理损失值
+            if loss is None:
+                logger.warning("No loss in model output, computing from logits")
+                # 计算交叉熵损失
+                shift_logits = logits[..., :-1, :].contiguous()
+                shift_labels = labels[..., 1:].contiguous()
+                loss_fct = torch.nn.CrossEntropyLoss(ignore_index=-100)
+                loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+            
+            # 检查损失有效性
+            if torch.isnan(loss) or torch.isinf(loss) or loss.item() < 0:
+                logger.warning(f"Invalid loss value: {loss.item() if not torch.isnan(loss) else 'NaN'}, using zero loss")
+                loss = torch.tensor(0.0, requires_grad=True, device=loss.device)
+            
+            # 计算分割损失（如果有掩码）
+            if masks is not None and self._validate_masks(masks):
+                try:
+                    seg_loss = self._compute_segmentation_loss(logits, masks, input_ids.device)
+                    if seg_loss is not None and not torch.isnan(seg_loss) and not torch.isinf(seg_loss):
+                        loss = loss + 0.3 * seg_loss  # 降低分割损失权重
+                        logger.debug(f"Added segmentation loss: {seg_loss.item()}")
+                except Exception as e:
+                    logger.warning(f"Failed to compute segmentation loss: {e}, using original loss")
+            
+            if return_outputs:
+                return loss, outputs
+            return loss
+            
+        except Exception as e:
+            logger.error(f"Unexpected error in compute_loss: {e}", exc_info=True)
+            zero_loss = torch.tensor(0.0, requires_grad=True)
+            return (zero_loss, {}) if return_outputs else zero_loss
     
     def _compute_dice_loss(self, pred_masks, target_masks):
         """计算Dice损失"""

@@ -36,6 +36,7 @@ import nibabel as nib
 from typing import Dict, List, Tuple, Optional
 import logging
 from dataclasses import dataclass
+import SimpleITK as sitk
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +48,8 @@ class LongitudinalSample:
     study_t1: str  # 随访扫描
     image_t0_path: str
     image_t1_path: str
-    mask_t0_path: str  
-    mask_t1_path: str
+    mask_t0_path: str  # 现在支持list格式：可以是str或List[str]
+    mask_t1_path: str  # 现在支持list格式：可以是str或List[str]
     nodules_info: List[Dict]  # 结节变化信息
     
 class LIDCLongitudinalDataset(Dataset):
@@ -96,7 +97,7 @@ class LIDCLongitudinalDataset(Dataset):
         logger.info(f"Generated {len(self.conversations)} conversations")
     
     def _load_samples(self) -> List[LongitudinalSample]:
-        """加载纵向样本数据"""
+        """加载纵向样本数据 - 支持四位医生标注"""
         samples = []
         
         # 加载数据集描述文件
@@ -108,14 +109,30 @@ class LIDCLongitudinalDataset(Dataset):
             meta_data = json.load(f)
             
         for patient_data in meta_data:
+            # 处理mask路径，支持单路径和多位医生路径列表
+            def get_mask_paths(mask_field):
+                mask_data = patient_data.get(mask_field, [])
+                if isinstance(mask_data, str):
+                    # 单路径格式
+                    return os.path.join(self.data_path, mask_data)
+                elif isinstance(mask_data, list):
+                    # 多医生标注格式
+                    return [os.path.join(self.data_path, path) for path in mask_data]
+                else:
+                    # 默认单路径
+                    return os.path.join(self.data_path, str(mask_data))
+            
+            mask_t0_paths = get_mask_paths("mask_t0")
+            mask_t1_paths = get_mask_paths("mask_t1")
+            
             sample = LongitudinalSample(
                 patient_id=patient_data["patient_id"],
                 study_t0=patient_data["study_t0"],
                 study_t1=patient_data["study_t1"],
                 image_t0_path=os.path.join(self.data_path, patient_data["image_t0"]),
                 image_t1_path=os.path.join(self.data_path, patient_data["image_t1"]),
-                mask_t0_path=os.path.join(self.data_path, patient_data["mask_t0"]),
-                mask_t1_path=os.path.join(self.data_path, patient_data["mask_t1"]),
+                mask_t0_path=mask_t0_paths,
+                mask_t1_path=mask_t1_paths,
                 nodules_info=patient_data["nodules"]
             )
             samples.append(sample)
@@ -247,19 +264,56 @@ class LIDCLongitudinalDataset(Dataset):
                 
         return templates
     
+    def _resample_ct_to_1mm(self, image_path: str) -> sitk.Image:
+        """将CT图像重采样到1mm层厚"""
+        # 使用SimpleITK加载图像
+        image_sitk = sitk.ReadImage(image_path)
+        
+        # 获取原始spacing和size
+        original_spacing = image_sitk.GetSpacing()
+        original_size = image_sitk.GetSize()
+        
+        # 如果z轴spacing已经是1mm，直接返回
+        if abs(original_spacing[2] - 1.0) < 0.01:
+            return image_sitk
+            
+        # 计算新的spacing和size
+        new_spacing = list(original_spacing)
+        new_spacing[2] = 1.0  # 设置z轴spacing为1mm
+        
+        # 根据新的spacing计算新的size，保持物理空间一致
+        new_size = [int(round(osz * osp / nsp)) 
+                   for osz, osp, nsp in zip(original_size, original_spacing, new_spacing)]
+        
+        # 创建重采样滤波器
+        resampler = sitk.ResampleImageFilter()
+        resampler.SetOutputSpacing(new_spacing)
+        resampler.SetSize(new_size)
+        resampler.SetOutputDirection(image_sitk.GetDirection())
+        resampler.SetOutputOrigin(image_sitk.GetOrigin())
+        resampler.SetInterpolator(sitk.sitkLinear)  # 线性插值
+        
+        # 执行重采样
+        resampled_image = resampler.Execute(image_sitk)
+        
+        logger.info(f"Resampled {image_path}: spacing {original_spacing} -> {new_spacing}, size {original_size} -> {new_size}")
+        return resampled_image
+    
     def _load_ct_image(self, image_path: str) -> Image.Image:
         """加载CT图像 - 返回PIL.Image避免双重处理"""
         if image_path.endswith('.nii') or image_path.endswith('.nii.gz'):
-            # 加载NIfTI格式的CT图像
-            nii_img = nib.load(image_path)
-            ct_data = nii_img.get_fdata()
+            # 首先进行层厚重采样到1mm
+            resampled_sitk = self._resample_ct_to_1mm(image_path)
+            
+            # 转换为numpy数组
+            ct_data = sitk.GetArrayFromImage(resampled_sitk)
             
             # 选择关键切片（最大投影）
             if len(ct_data.shape) == 3:
                 # 计算每个切片的总强度作为代理指标
-                slice_sums = np.sum(ct_data, axis=(0, 1))
+                slice_sums = np.sum(ct_data, axis=(1, 2))  # sitk数组维度顺序为(z,y,x)
                 slice_idx = np.argmax(slice_sums)
-                ct_slice = ct_data[:, :, slice_idx]
+                ct_slice = ct_data[slice_idx, :, :]
             else:
                 ct_slice = ct_data
                 
@@ -283,10 +337,22 @@ class LIDCLongitudinalDataset(Dataset):
                 # 返回虚拟图像数据 - 使用配置的图像尺寸
                 return Image.new('RGB', (self.default_width, self.default_height), color='black')
     
+    def _select_random_doctor_mask(self, mask_paths) -> str:
+        """从多位医生标注中随机选择一个"""
+        if isinstance(mask_paths, list):
+            # 如果是多位医生的标注列表，随机选择一个
+            return np.random.choice(mask_paths)
+        else:
+            # 如果是单路径，直接返回
+            return mask_paths
+    
     def _load_mask(self, mask_path: str) -> torch.Tensor:
         """加载分割掩码"""
-        if mask_path.endswith('.nii') or mask_path.endswith('.nii.gz'):
-            nii_img = nib.load(mask_path)
+        # 先选择随机医生标注
+        selected_path = self._select_random_doctor_mask(mask_path)
+        
+        if selected_path.endswith('.nii') or selected_path.endswith('.nii.gz'):
+            nii_img = nib.load(selected_path)
             mask_data = nii_img.get_fdata()
             
             # 选择对应切片
@@ -300,11 +366,11 @@ class LIDCLongitudinalDataset(Dataset):
             
         else:
             try:
-                with Image.open(mask_path) as mask_img:
+                with Image.open(selected_path) as mask_img:
                     mask = mask_img.convert('L')
                     mask = (np.array(mask) > 0).astype(np.uint8)
             except Exception as e:
-                print(f"Error loading mask {mask_path}: {str(e)}")
+                print(f"Error loading mask {selected_path}: {str(e)}")
                 # 返回虚拟掩码数据 - 使用配置的图像尺寸
                 mask = np.zeros((self.default_height, self.default_width), dtype=np.uint8)
             
@@ -314,7 +380,7 @@ class LIDCLongitudinalDataset(Dataset):
         return len(self.conversations)
     
     def __getitem__(self, idx):
-        """获取数据项 - 返回路径列表格式"""
+        """获取数据项 - 支持随机选择医生标注"""
         max_retries = 10
         original_idx = idx
         
@@ -351,25 +417,74 @@ class LIDCLongitudinalDataset(Dataset):
         return None
     
     def collate_fn(self, batch):
-        """批处理函数 - 返回路径列表格式"""
-        if self.is_inference:
-            return batch[0] if batch else {}
-            
-        # 过滤掉None样本
-        valid_batch = [item for item in batch if item is not None]
-        if not valid_batch:
-            return {"image": [], "masks": [], "conversations": [], "metadata": []}
-            
-        # 提取路径列表 - SegLLM期望的格式
-        image_paths = []
-        for item in valid_batch:
-            # 从__getitem__返回的"image"键获取路径列表
-            if "image" in item and isinstance(item["image"], list):
-                image_paths.extend(item["image"])
+        """
+        自定义批次整理函数，处理不同大小的图像和掩码
         
-        return {
-            "image": image_paths,  # SegLLM期望的路径列表格式
-            "masks": torch.stack([item["masks"] for item in valid_batch]) if valid_batch else torch.zeros(0),
-            "conversations": [item["conversations"] for item in valid_batch],
-            "metadata": [item["metadata"] for item in valid_batch]
-        }
+        Args:
+            batch: 批次数据列表
+            
+        Returns:
+            整理后的批次数据
+        """
+        # 过滤掉None样本（加载失败的情况）
+        valid_batch = [item for item in batch if item is not None]
+        
+        if len(valid_batch) == 0:
+            # 如果所有样本都无效，返回空批次
+            logger.warning("All samples in batch are None, returning empty batch")
+            return {}
+        
+        # 提取各个字段
+        batched_data = {}
+        
+        # 处理张量数据
+        tensor_keys = ['input_ids', 'labels', 'attention_mask']
+        for key in tensor_keys:
+            if key in valid_batch[0] and valid_batch[0][key] is not None:
+                try:
+                    batched_data[key] = torch.stack([item[key] for item in valid_batch])
+                except RuntimeError as e:
+                    logger.warning(f"Failed to stack {key}: {e}, padding instead")
+                    # 如果堆叠失败，进行填充
+                    tensors = [item[key] for item in valid_batch]
+                    max_len = max(t.shape[0] for t in tensors)
+                    padded_tensors = []
+                    for t in tensors:
+                        if t.shape[0] < max_len:
+                            padding = torch.zeros(max_len - t.shape[0], *t.shape[1:], dtype=t.dtype, device=t.device)
+                            t = torch.cat([t, padding], dim=0)
+                        padded_tensors.append(t)
+                    batched_data[key] = torch.stack(padded_tensors)
+                except Exception as e:
+                    logger.error(f"Unexpected error stacking {key}: {e}")
+                    # 返回空批次
+                    return {}
+        
+        # 处理图像路径（保持为列表）
+        if 'image' in valid_batch[0]:
+            image_paths = []
+            for item in valid_batch:
+                if isinstance(item['image'], list):
+                    image_paths.extend(item['image'])
+                else:
+                    image_paths.append(item['image'])
+            batched_data['images'] = image_paths
+        
+        # 处理掩码路径（保持为列表）
+        if 'masks' in valid_batch[0]:
+            batched_data['masks'] = torch.stack([item['masks'] for item in valid_batch])
+        
+        # 处理目标掩码路径
+        if 'target_mask' in valid_batch[0]:
+            batched_data['target_mask'] = [item['target_mask'] for item in valid_batch]
+        
+        # 处理其他元数据
+        metadata_keys = ['task_type', 'change_info', 'patient_id', 'conversations', 'metadata']
+        for key in metadata_keys:
+            if key in valid_batch[0]:
+                batched_data[key] = [item[key] for item in valid_batch]
+        
+        # 添加批次大小信息
+        batched_data['batch_size'] = len(valid_batch)
+        
+        return batched_data
