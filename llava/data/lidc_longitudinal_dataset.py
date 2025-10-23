@@ -264,40 +264,45 @@ class LIDCLongitudinalDataset(Dataset):
                 
         return templates
     
-    def _resample_ct_to_1mm(self, image_path: str) -> sitk.Image:
+    def _resample_ct_to_1mm(self, image_path: str) -> Optional[sitk.Image]:
         """将CT图像重采样到1mm层厚"""
-        # 使用SimpleITK加载图像
-        image_sitk = sitk.ReadImage(image_path)
-        
-        # 获取原始spacing和size
-        original_spacing = image_sitk.GetSpacing()
-        original_size = image_sitk.GetSize()
-        
-        # 如果z轴spacing已经是1mm，直接返回
-        if abs(original_spacing[2] - 1.0) < 0.01:
-            return image_sitk
+        try:
+            # 使用SimpleITK加载图像
+            image_sitk = sitk.ReadImage(image_path)
             
-        # 计算新的spacing和size
-        new_spacing = list(original_spacing)
-        new_spacing[2] = 1.0  # 设置z轴spacing为1mm
-        
-        # 根据新的spacing计算新的size，保持物理空间一致
-        new_size = [int(round(osz * osp / nsp)) 
-                   for osz, osp, nsp in zip(original_size, original_spacing, new_spacing)]
-        
-        # 创建重采样滤波器
-        resampler = sitk.ResampleImageFilter()
-        resampler.SetOutputSpacing(new_spacing)
-        resampler.SetSize(new_size)
-        resampler.SetOutputDirection(image_sitk.GetDirection())
-        resampler.SetOutputOrigin(image_sitk.GetOrigin())
-        resampler.SetInterpolator(sitk.sitkLinear)  # 线性插值
-        
-        # 执行重采样
-        resampled_image = resampler.Execute(image_sitk)
-        
-        logger.info(f"Resampled {image_path}: spacing {original_spacing} -> {new_spacing}, size {original_size} -> {new_size}")
-        return resampled_image
+            # 获取原始spacing和size
+            original_spacing = image_sitk.GetSpacing()
+            original_size = image_sitk.GetSize()
+            
+            # 如果z轴spacing已经是1mm，直接返回
+            if abs(original_spacing[2] - 1.0) < 0.01:
+                return image_sitk
+                
+            # 计算新的spacing和size
+            new_spacing = list(original_spacing)
+            new_spacing[2] = 1.0  # 设置z轴spacing为1mm
+            
+            # 根据新的spacing计算新的size，保持物理空间一致
+            new_size = [int(round(osz * osp / nsp)) 
+                       for osz, osp, nsp in zip(original_size, original_spacing, new_spacing)]
+            
+            # 创建重采样滤波器
+            resampler = sitk.ResampleImageFilter()
+            resampler.SetOutputSpacing(new_spacing)
+            resampler.SetSize(new_size)
+            resampler.SetOutputDirection(image_sitk.GetDirection())
+            resampler.SetOutputOrigin(image_sitk.GetOrigin())
+            resampler.SetInterpolator(sitk.sitkLinear)  # 线性插值
+            
+            # 执行重采样
+            resampled_image = resampler.Execute(image_sitk)
+            
+            logger.info(f"Resampled {image_path}: spacing {original_spacing} -> {new_spacing}, size {original_size} -> {new_size}")
+            return resampled_image
+            
+        except Exception as e:
+            logger.error(f"Failed to resample CT image {image_path}: {str(e)}")
+            return None
     
     def _load_ct_image(self, image_path: str) -> Image.Image:
         """加载CT图像 - 返回PIL.Image避免双重处理"""
@@ -305,22 +310,30 @@ class LIDCLongitudinalDataset(Dataset):
             # 首先进行层厚重采样到1mm
             resampled_sitk = self._resample_ct_to_1mm(image_path)
             
+            # 配准失败回退处理
+            if resampled_sitk is None:
+                logger.error(f"CT resampling failed for {image_path}, returning empty image")
+                return Image.new('RGB', (self.default_width, self.default_height), color='black')
+            
             # 转换为numpy数组
             ct_data = sitk.GetArrayFromImage(resampled_sitk)
             
             # 选择关键切片（最大投影）
             if len(ct_data.shape) == 3:
-                # 计算每个切片的总强度作为代理指标
-                slice_sums = np.sum(ct_data, axis=(1, 2))  # sitk数组维度顺序为(z,y,x)
+                # 计算每个切片的前景像素数（二值化后求和）作为代理指标
+                # 避免使用原始强度值，防止概率图影响选层
+                binary_slices = (ct_data > -1000).astype(np.float32)  # 简单的二值化阈值
+                slice_sums = np.sum(binary_slices, axis=(1, 2))  # sitk数组维度顺序为(z,y,x)
                 slice_idx = np.argmax(slice_sums)
                 ct_slice = ct_data[slice_idx, :, :]
             else:
                 ct_slice = ct_data
                 
             # HU值窗口化：使用配置的肺窗参数
-            # 范围: [window_center - window_width/2, window_center + window_width/2]
-            min_hu = self.ct_window_center - self.ct_window_width // 2
-            max_hu = self.ct_window_center + self.ct_window_width // 2
+            # 修复：window=-600, level=1500 应该对应区间 [-1500, 300] 而不是 [-1500, 600]
+            # 正确的肺窗设置：window_center=-600, window_width=1500
+            min_hu = self.ct_window_center - self.ct_window_width // 2  # -600 - 750 = -1350
+            max_hu = self.ct_window_center + self.ct_window_width // 2  # -600 + 750 = 150
             ct_slice = np.clip((ct_slice - min_hu) / (max_hu - min_hu) * 255, 0, 255).astype(np.uint8)
             
             # 转换为RGB图像（三通道重复）
