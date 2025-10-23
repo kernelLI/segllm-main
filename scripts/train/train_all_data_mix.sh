@@ -1,4 +1,8 @@
 #!/bin/bash
+# SegLLM全数据混合训练脚本
+# 输入: 环境变量BASE_MODEL(基础模型路径)、OUTPUT_DIR(输出目录)、LOCAL_HOST(GPU设备)
+# 输出: 训练后的模型检查点、训练日志、评估结果
+# 功能: 使用DeepSpeed分布式训练框架，在多个数据集上联合训练SegLLM模型
 
 deepspeed \
     --include "localhost:${LOCAL_HOST:-0,1,2,3}" \

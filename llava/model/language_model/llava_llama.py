@@ -1,3 +1,31 @@
+"""
+SegLLM语言模型模块 (LLaVA-Llama)
+实现基于Llama架构的多模态因果语言模型
+
+输入:
+- config: LlavaConfig配置对象，包含模型超参数
+- input_ids: 输入token ID序列
+- attention_mask: 注意力掩码
+- images: 图像字典，包含图像数据
+- labels: 标签序列用于训练
+- generation_target: 生成目标字典
+- extra_replacement: 额外替换数据用于多模态处理
+
+输出:
+- LlavaLlamaModel: LLaVA-Llama模型实例
+- LlavaLlamaForCausalLM: LLaVA-Llama因果语言模型实例
+- forward(): 返回CausalLMOutputWithPast包含logits和损失
+- encode_images(): 返回图像特征张量
+- process_extra_replacement_data(): 返回处理后的替换张量和剩余任务
+
+功能:
+- 实现多模态输入处理（图像+文本）
+- 支持图像编码和特征投影
+- 处理额外替换数据（分割、生成等）
+- 实现因果语言建模和前向传播
+- 支持训练模式下的多任务损失计算
+"""
+
 #    Copyright 2023 Haotian Liu
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");

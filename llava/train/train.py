@@ -1,3 +1,31 @@
+"""
+SegLLM主训练脚本
+支持多模态（图像、文本、分割、音频、视频）的模型训练
+
+输入:
+- model_name_or_path: 预训练模型路径
+- vision_tower: 视觉塔模型路径
+- image_folder: 图像数据文件夹
+- conversation_folder: 对话数据文件夹
+- annotation_folder: 标注数据文件夹
+- conversation_config: 对话配置文件
+- segmentation_config: 分割配置文件
+- 其他训练参数（batch_size、learning_rate等）
+
+输出:
+- 训练好的模型权重文件
+- 训练日志和检查点
+- 评估结果和可视化
+- 推理输出结果
+
+功能:
+- 支持多模态数据加载和预处理
+- 实现多任务损失函数（分割、检测、生成等）
+- 支持LoRA微调和DeepSpeed训练
+- 提供模型评估和推理功能
+- 支持对话式训练数据格式
+"""
+
 # Adopted from https://github.com/lm-sys/FastChat. Below is the original copyright:
 # Adopted from tatsu-lab@stanford_alpaca. Below is the original copyright:
 #    Copyright 2023 Rohan Taori, Ishaan Gulrajani, Tianyi Zhang, Yann Dubois, Xuechen Li
@@ -31,7 +59,7 @@ from torch.utils.data import Dataset
 from llava.train.llava_trainer import LLaVATrainer
 
 from llava import conversation as conversation_lib
-from llava.model import *
+from llava.model import LlavaLlamaForCausalLM, LlavaConfig
 from llava.mm_utils import tokenizer_image_token
 
 from PIL import Image
@@ -785,7 +813,7 @@ def get_replacement_len(s):
 import yaml
 class LazySupervisedDataset(Dataset):
     """Dataset for supervised fine-tuning."""
-
+    
     def __init__(self, 
                  tokenizer: transformers.PreTrainedTokenizer,
                  data_args: DataArguments,
@@ -812,7 +840,8 @@ class LazySupervisedDataset(Dataset):
                 file_path = os.path.join(data_args.conversation_folder, file_name)
                 print(f" ---- Training: Loading {file_path.split('/')[-1]} conversations ----")
                 with open(file_path, "r") as f:
-                    if k := data_args.load_data:
+                    k = data_args.load_data
+                    if k:
                         to_extend = json.load(f)[:k]
                     else:
                         to_extend = json.load(f)
@@ -835,7 +864,8 @@ class LazySupervisedDataset(Dataset):
             self.dataset_lengths.append(1)       # during inference, everything in one conversation
 
         # FOR DEBUGGIN:
-        if num_rounds := data_args.limit_rounds:
+        num_rounds = data_args.limit_rounds
+        if num_rounds:
             for entry in self.list_data_dict:
                 entry['conversations'] = entry['conversations'][:2*num_rounds]
 
@@ -843,6 +873,11 @@ class LazySupervisedDataset(Dataset):
         self.tokenizer = tokenizer
         self.data_args = data_args
         self.TXT2TENSOR = dict()
+        
+        # 添加图像加载失败统计
+        self.failed_image_count = 0
+        self.total_image_count = 0
+        
         print('--------------------Dataset Lengths -----------------------')
         print(self.dataset_lengths)
 
@@ -856,11 +891,15 @@ class LazySupervisedDataset(Dataset):
         # if 'any2any' in z['fpath']:
         #     print(x)
         #     return torch.zeros((1,1024))
-        data = np.load(os.path.join(self.data_args.image_folder,z['fpath']))
-        assert str(z['key']) in data,data.keys()
-        res = torch.tensor(data[str(z['key'])]).view(1,1024)
-        res = res / (res.norm()+1e-9) * 20
-        return res
+        try:
+            data = np.load(os.path.join(self.data_args.image_folder,z['fpath']))
+            assert str(z['key']) in data,data.keys()
+            res = torch.tensor(data[str(z['key'])]).view(1,1024)
+            res = res / (res.norm()+1e-9) * 20
+            return res
+        except Exception as e:
+            print(f"Error loading tensor data for {x}: {str(e)}")
+            return torch.zeros((1,1024))  # 返回默认值而不是None
 
     def get_dataset_indices(self):
         return list([
@@ -870,6 +909,32 @@ class LazySupervisedDataset(Dataset):
     def get_dataset_weight(self):
         # placeholder
         return [1] * len(self.dataset_lengths)
+    
+    def get_image_load_stats(self):
+        """获取图像加载统计信息"""
+        if self.total_image_count == 0:
+            return "No images processed"
+        
+        fail_rate = (self.failed_image_count / self.total_image_count) * 100
+        return f"Image loading stats: {self.failed_image_count}/{self.total_image_count} failed ({fail_rate:.2f}%)"
+    
+    def get_filtered_stats(self):
+        """获取过滤统计信息"""
+        if not hasattr(self, 'filtered_count'):
+            return "No filtering stats available"
+        
+        total_processed = self.filtered_count.get('total', 0)
+        filtered_out = self.filtered_count.get('filtered', 0)
+        if total_processed == 0:
+            return "No samples processed for filtering"
+        
+        filter_rate = (filtered_out / total_processed) * 100
+        return f"Filtering stats: {filtered_out}/{total_processed} filtered out ({filter_rate:.2f}%)"
+    
+    def reset_filtered_stats(self):
+        """重置过滤统计信息"""
+        if hasattr(self, 'filtered_count'):
+            self.filtered_count = {'total': 0, 'filtered': 0}
 
     # helper function for build_query (handles mask-encode, bbox-encode, not mask-decode)
     def get_bitmask_bbox_encode(self, image_file_lst):
@@ -880,9 +945,10 @@ class LazySupervisedDataset(Dataset):
             image_folder = self.data_args.image_folder
             image_path = os.path.join(image_folder, image_file)
             processor = self.data_args.image_processor              # CLIP processor
-            inputs = processor(Image.open(image_path))              # input image
-            inputs = inputs.pixel_values[0] 
-            masked_instance_processed = torch.tensor(inputs)        # dummy mask-encode, just encode the image without masking or cropping
+            with Image.open(image_path) as img:
+                inputs = processor(img)              # input image
+                inputs = inputs.pixel_values[0] 
+                masked_instance_processed = torch.tensor(inputs)        # dummy mask-encode, just encode the image without masking or cropping
             bbox_coords_sam = torch.zeros(4)                        # dummy box-encode, all zeros
             return masked_instance_processed, bbox_coords_sam, mask_id
 
@@ -906,9 +972,17 @@ class LazySupervisedDataset(Dataset):
         assert os.path.exists(image_path)
 
         # Mask image with GT mask
-        image = Image.open(image_path)
-        (w, h) = image.size
-        image = np.array(image.convert('RGB'))
+        try:
+            with Image.open(image_path) as image:
+                (w, h) = image.size
+                image = np.array(image.convert('RGB'))
+                self.total_image_count += 1
+        except Exception as e:
+            print(f"Error loading image {image_path}: {str(e)}")
+            self.failed_image_count += 1
+            self.total_image_count += 1
+            # 记录错误并返回None，让上层处理
+            return None, None, None
         gt_mask = self.data_args.register.get_bitmask(
             dataset_name,
             mask_id,
@@ -935,15 +1009,17 @@ class LazySupervisedDataset(Dataset):
         
         # preprocess for CLIP
         processor = self.data_args.image_processor
-        inputs = processor(Image.fromarray(image_masked_cropped_padded))        
-        inputs =inputs.pixel_values[0] # C H W, np.npndarr
-        inputs = torch.tensor(inputs)#.permute(1,2,0)
-        masked_instance_processed = inputs
+        with Image.fromarray(image_masked_cropped_padded) as processed_img:
+            inputs = processor(processed_img)        
+            inputs =inputs.pixel_values[0] # C H W, np.npndarr
+            inputs = torch.tensor(inputs)#.permute(1,2,0)
+            masked_instance_processed = inputs
 
         # bbox coords in SAM dimension
         processor = self.data_args.mask_processor
-        data_mask = processor(np.array(Image.open(image_path).convert('RGB')),
-                            masks=[gt_mask,gt_mask])
+        with Image.open(image_path) as img:
+            img_array = np.array(img.convert('RGB'))
+        data_mask = processor(img_array, masks=[gt_mask,gt_mask])
         mask_bin = data_mask['mask']
         y0 = torch.where(mask_bin.sum((0,1)))[0].min()
         y1 = torch.where(mask_bin.sum((0,1)))[0].max()
@@ -978,18 +1054,18 @@ class LazySupervisedDataset(Dataset):
             #TODO: @shaolun_zhang, please fix inference 
             image_folder = self.data_args.image_folder
             image_path = os.path.join(image_folder, image_file)
-            image = Image.open(image_path)
-            (w, h) = image.size
-            mask = np.ones((h, w, 1), dtype=np.uint8)                   # dummy mask as gt mask for inference
-            processor = self.data_args.mask_processor                   # processor --> decoder dimension
-            data = processor(np.array(image.convert('RGB')), masks=[mask,mask]) # expect list of masks [ref, gt]
-            data['image_path'] = image_path
-            data['task_type'] = task_type
-            return data, tgt_mask_id # 1 1024     # Question: use mask_id_0 or mask_i_1
+            with Image.open(image_path) as image:
+                (w, h) = image.size
+                mask = np.ones((h, w, 1), dtype=np.uint8)                   # dummy mask as gt mask for inference
+                processor = self.data_args.mask_processor                   # processor --> decoder dimension
+                data = processor(np.array(image.convert('RGB')), masks=[mask,mask]) # expect list of masks [ref, gt]
+                data['image_path'] = image_path
+                data['task_type'] = task_type
+                return data, tgt_mask_id # 1 1024     # Question: use mask_id_0 or mask_i_1
 
         # TODO: temp fix
         def process_mask_id(mask_id):
-            if mask_id == '' or mask_id == "'" or mask_id == 'none' or mask_id == None:         # this is the case for reason_seg sentences
+            if mask_id == '' or mask_id == "'" or mask_id == 'none' or mask_id is None:         # this is the case for reason_seg sentences
                 mask_id = None
             elif "_" in mask_id or "-" in mask_id:
                 mask_id=mask_id
@@ -1013,9 +1089,17 @@ class LazySupervisedDataset(Dataset):
             image_path = image_path.replace('images/', 'object365/')
         assert os.path.exists(image_path)
 
-        image = Image.open(image_path)
-        (w, h) = image.size
-        image = np.array(image.convert('RGB'))
+        try:
+            with Image.open(image_path) as image:
+                (w, h) = image.size
+                image_array = np.array(image.convert('RGB'))
+                self.total_image_count += 1
+        except Exception as e:
+            print(f"Error loading image {image_path}: {str(e)}")
+            self.failed_image_count += 1
+            self.total_image_count += 1
+            # 记录错误并返回None，让上层处理
+            return None, None
         tgt_mask = self.data_args.register.get_bitmask(
             dataset_name,
             tgt_mask_id,
@@ -1035,15 +1119,15 @@ class LazySupervisedDataset(Dataset):
             ref_mask = np.zeros_like(tgt_mask)
         masks = [ref_mask,tgt_mask]
         processor = self.data_args.mask_processor
-        data = processor(np.array(Image.open(image_path).convert('RGB')),
-                            masks=masks)
+        data = processor(image_array, masks=masks)
         data['image_path'] = image_path
         data['task_type'] = task_type
         return data, tgt_mask_id
 
     def build_query(self,x):
         data = torch.zeros(1,3,224,224)
-        if image_file_lst := re.compile('IMAGE256:(.*)$').findall(x):
+        image_file_lst = re.compile('IMAGE256:(.*)$').findall(x)
+        if image_file_lst:
             image_file = image_file_lst[0]
             image_folder = self.data_args.image_folder
             image_path = os.path.join(image_folder, image_file)
@@ -1056,21 +1140,39 @@ class LazySupervisedDataset(Dataset):
             #     print('image_path', image_path)
             assert os.path.exists(image_path)
 
-            inputs = Image.open(image_path).convert('RGB')
-            processor = self.data_args.image_processor
-            inputs = processor(inputs)
-            inputs =inputs.pixel_values[0] # C H W, np.npndarr
-            inputs = torch.tensor(inputs)#.permute(1,2,0)
-            data = inputs
-            return 'image-encode',data
-        elif image_file_lst := re.compile('MASK-ENCODE:(.*)$').findall(x):
+            try:
+                with Image.open(image_path) as img:
+                    inputs = img.convert('RGB')
+                    processor = self.data_args.image_processor
+                    inputs = processor(inputs)
+                    inputs =inputs.pixel_values[0] # C H W, np.npndarr
+                    inputs = torch.tensor(inputs)#.permute(1,2,0)
+                    data = inputs
+                    self.total_image_count += 1
+                    return 'image-encode',data
+            except Exception as e:
+                print(f"Error loading image in build_query {image_path}: {str(e)}")
+                self.failed_image_count += 1
+                self.total_image_count += 1
+                # 返回None，让上层逻辑处理
+                return None, None
+        image_file_lst = re.compile('MASK-ENCODE:(.*)$').findall(x)
+        if image_file_lst:
             masked_instance_processed, bbox_coords_sam,mask_id = self.get_bitmask_bbox_encode(image_file_lst)
+            if masked_instance_processed is None:  # 图像加载失败
+                return None
             return 'mask-encode', (masked_instance_processed,mask_id)
-        elif image_file_lst := re.compile('BOX-ENCODE:(.*)$').findall(x):
+        image_file_lst = re.compile('BOX-ENCODE:(.*)$').findall(x)
+        if image_file_lst:
             masked_instance_processed, bbox_coords_sam,mask_id = self.get_bitmask_bbox_encode(image_file_lst)
+            if masked_instance_processed is None:  # 图像加载失败
+                return None
             return 'bbox-encode', (bbox_coords_sam,mask_id)
-        elif image_file_lst := re.compile('MASK-DECODE:(.*)$').findall(x):
+        image_file_lst = re.compile('MASK-DECODE:(.*)$').findall(x)
+        if image_file_lst:
             data, tgt_mask_id = self.get_bitmask_decode(image_file_lst)
+            if data is None:  # 图像加载失败
+                return None
             return 'mask-decode',(data,tgt_mask_id) # 1 1024
         else:
             raise NotImplementedError(x)
@@ -1176,7 +1278,7 @@ class LazySupervisedDataset(Dataset):
                             set_instance = False
                         prompt_clean = prompt[1:-1]
                         if clean(prompt_clean) not in  self.TXT2TENSOR:
-                            print(prompt_clean)
+                            # print(prompt_clean)  # 移除调试输出以优化性能
                             val = val.replace(prompt,remove_prefix(prompt_clean),1)
                             continue
                         if prompt == base:
@@ -1235,7 +1337,16 @@ class LazySupervisedDataset(Dataset):
                 turn['value']= val
                 assert len(replacement_mask) == len(replacement)
             if len(replacement):
-                extra_replacement = torch.cat([self.get_tensors_from_str(clean(x)) for x in replacement])
+                # 处理get_tensors_from_str可能返回None的情况
+                tensor_results = []
+                for x in replacement:
+                    result = self.get_tensors_from_str(clean(x))
+                    if result is not None:  # 只保留非None的结果
+                        tensor_results.append(result)
+                if tensor_results:  # 如果有有效的tensor结果
+                    extra_replacement = torch.cat(tensor_results)
+                else:
+                    extra_replacement = []  # 如果没有有效结果，设置为空列表
             extra_replacement_mask = replacement_mask
 
         if sources[0].get('task') == 'segmentation':
@@ -1260,7 +1371,8 @@ class LazySupervisedDataset(Dataset):
                     contains_image_encode = False
                     for prompt in matches: # list of str wit '[]'
                         prompt_clean = prompt[1:-1]
-                        val = val.replace(prompt,DEFAULT_VIDEO_TOKEN*(rl:=get_replacement_len(prompt_clean)),1)
+                        rl = get_replacement_len(prompt_clean)
+                        val = val.replace(prompt,DEFAULT_VIDEO_TOKEN*rl,1)
                         replacement.append(prompt_clean)
                         replacement_mask.extend([REPLACEMENT_TYPE.INPUT]*rl)
                     
@@ -1286,7 +1398,8 @@ class LazySupervisedDataset(Dataset):
                     matches = find_brackets(val)
                     for prompt in matches: # list of str wit '[]'
                         prompt_clean = prompt[1:-1]
-                        val = val.replace(prompt,DEFAULT_SEGMENTATION_TOKEN*(rl:=get_replacement_len(prompt_clean)),1)
+                        rl = get_replacement_len(prompt_clean)
+                        val = val.replace(prompt,DEFAULT_SEGMENTATION_TOKEN*rl,1)
                         replacement.append(prompt_clean)
                         replacement_mask.extend([REPLACEMENT_TYPE.SEG]*rl)
                         seen = 0
@@ -1300,8 +1413,13 @@ class LazySupervisedDataset(Dataset):
                 replacement = []
 
             if len(replacement):
-
-                extra_replacement = list([self.build_query(x) for x in replacement])
+                # 处理build_query可能返回None的情况
+                query_results = []
+                for x in replacement:
+                    result = self.build_query(x)
+                    if result is not None:  # 只保留非None的结果
+                        query_results.append(result)
+                extra_replacement = query_results
             extra_replacement_mask = replacement_mask
 
         info['output_text'] = self.data_args.output_text
@@ -1366,6 +1484,20 @@ class DataCollatorForSupervisedDataset(object):
     tokenizer: transformers.PreTrainedTokenizer
 
     def __call__(self, instances: Sequence[Dict]) -> Dict[str, torch.Tensor]:
+        # 过滤掉None值（图像加载失败的样本）
+        original_count = len(instances)
+        instances = [inst for inst in instances if inst is not None]
+        filtered_count = original_count - len(instances)
+        
+        # 更新过滤统计信息
+        if not hasattr(self, 'filtered_count'):
+            self.filtered_count = {'total': 0, 'filtered': 0}
+        self.filtered_count['total'] += original_count
+        self.filtered_count['filtered'] += filtered_count
+        
+        if not instances:
+            return None  # 如果所有样本都失败，返回None
+            
         input_ids, labels = tuple([instance[key] for instance in instances]
                                   for key in ("input_ids", "labels"))
         input_ids = torch.nn.utils.rnn.pad_sequence(
@@ -1756,6 +1888,17 @@ def train():
         trainer.train(resume_from_checkpoint=True)
     else:
         trainer.train()
+    
+    # 打印图像加载统计信息
+    if hasattr(trainer, 'train_dataset') and hasattr(trainer.train_dataset, 'get_image_load_stats'):
+        print(trainer.train_dataset.get_image_load_stats())
+    
+    # 打印过滤统计信息
+    if hasattr(trainer, 'data_collator') and hasattr(trainer.data_collator, 'get_filtered_stats'):
+        print(trainer.data_collator.get_filtered_stats())
+        # 重置统计信息，准备下一轮统计
+        trainer.data_collator.reset_filtered_stats()
+    
     trainer.save_state()
 
     model.config.use_cache = True

@@ -1,3 +1,27 @@
+"""
+SegLLM对话处理模块
+定义了对话数据结构和各种对话风格格式
+
+输入:
+- system: 系统提示信息
+- roles: 角色列表（如["user", "assistant"]）
+- messages: 消息列表，每个消息包含角色和内容
+- sep_style: 分隔符风格（SINGLE、TWO、MPT、LLAMA_2、PLAIN）
+- sep/sep2: 分隔符字符串
+
+输出:
+- get_prompt(): 生成格式化的对话提示字符串
+- get_images(): 提取对话中的图像数据
+- to_gradio_chatbot(): 转换为Gradio聊天机器人格式
+- copy(): 复制对话实例
+
+功能:
+- 支持多种对话格式风格
+- 处理多模态对话（包含图像、文本）
+- 提供图像预处理和格式转换
+- 支持对话历史管理和复制
+"""
+
 import dataclasses
 from enum import auto, Enum
 from typing import List, Tuple

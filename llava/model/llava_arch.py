@@ -1,3 +1,30 @@
+"""
+SegLLM模型架构模块
+定义LLaVA元模型和因果语言模型架构
+
+输入:
+- config: 模型配置对象，包含视觉塔、投影器等参数
+- images: 输入图像张量
+- input_ids: 输入token ID序列
+- attention_mask: 注意力掩码
+- labels: 标签序列
+- model_args: 模型参数字段，包含vision_tower、mm_projector_type等
+
+输出:
+- LlavaMetaModel: LLaVA元模型实例，包含视觉塔和多模态投影器
+- encode_images(): 返回图像特征张量
+- prepare_inputs_labels_for_multimodal(): 返回处理后的输入嵌入和标签
+- get_vision_tower(): 返回视觉塔实例
+- get_segmentator(): 返回分割器实例
+
+功能:
+- 构建和管理视觉塔、多模态投影器
+- 图像特征编码和投影
+- 多模态输入准备和标签生成
+- 支持分割器集成
+- 处理图像token和文本token的融合
+"""
+
 #    Copyright 2023 Haotian Liu
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");

@@ -1,3 +1,32 @@
+"""
+SegLLM多模态工具模块
+提供图像处理、token化和模型工具函数
+
+输入:
+- prompt: 包含图像token的文本提示
+- images: PIL图像列表或base64编码的图像
+- image_processor: 图像处理器实例
+- model_cfg: 模型配置对象
+- tokenizer: 分词器实例
+- image_token_index: 图像token索引，默认为IMAGE_TOKEN_INDEX
+
+输出:
+- tokenizer_image_token(): 返回处理后的输入token ID列表
+- process_images(): 返回预处理后的图像张量
+- load_image_from_base64(): 返回PIL图像对象
+- expand2square(): 返回正方形填充后的图像
+- get_model_name_from_path(): 返回模型名称字符串
+- KeywordsStoppingCriteria: 关键词停止条件类
+
+功能:
+- 处理图像token化和文本拼接
+- 图像预处理和尺寸标准化
+- base64图像编码解码
+- 图像正方形填充处理
+- 模型路径解析
+- 提供关键词停止生成条件
+"""
+
 from typing import Any
 from PIL import Image
 from io import BytesIO

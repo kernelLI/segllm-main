@@ -459,7 +459,8 @@ def main():
             if user_inputs == 'exit':
                 break
 
-            if matches := re.findall(r'\[REF:(\d+)\]', user_inputs):
+            matches = re.findall(r'\[REF:(\d+)\]', user_inputs)
+            if matches:
                 user_selected_idx = matches[0]
             else:
                 user_selected_idx = None

@@ -1,19 +1,32 @@
 #!/usr/bin/env python
 # Copyright (c) Facebook, Inc. and its affiliates.
 """
-A main training script.
+UniNext-Segmentation训练脚本（Detectron2框架）
 
-This scripts reads a given config file and runs the training or evaluation.
-It is an entry point that is made to train standard models in detectron2.
+输入:
+- config_file: 配置文件路径（YAML格式）
+- num_gpus: 使用的GPU数量
+- num_machines: 分布式训练的机器数量
+- machine_rank: 当前机器排名
+- dist_url: 分布式训练URL
+- eval_only: 是否仅进行评估模式
+- resume: 是否从检查点恢复训练
+- opts: 额外的配置选项列表
 
-In order to let one script support training of many models,
-this script contains logic that are specific to these built-in models and therefore
-may not be suitable for your own project.
-For example, your research project perhaps only needs a single "evaluator".
+输出:
+- 训练日志：包含损失值、学习率、评估指标等
+- 模型检查点：保存训练过程中的模型权重
+- 评估结果：包含各种分割指标（mIoU、Dice等）
+- 可视化结果：训练过程中的样本预测和损失曲线
 
-Therefore, we recommend you to use detectron2 as an library and take
-this file as an example of how to use the library.
-You may want to write your own script with your datasets and other customizations.
+功能:
+- 读取Detectron2配置文件并设置训练参数
+- 支持多种分割任务（语义分割、实例分割、全景分割）
+- 提供标准训练流程和评估逻辑
+- 支持测试时增强（TTA）和多尺度测试
+- 集成多种评估器（COCO、Cityscapes、Pascal VOC等）
+- 支持分布式训练和多GPU并行
+- 提供模型检查点保存和恢复功能
 """
 
 import logging

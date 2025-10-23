@@ -1,3 +1,21 @@
+"""
+SegLLM分割器构建器
+根据配置文件构建分割器模型
+
+输入:
+- config: 分割器配置名称字符串或配置字典
+
+输出:
+- model: 实例化的分割器模型
+
+功能:
+- 从YAML配置文件加载分割器配置
+- 根据配置实例化分割器模型
+- 加载预训练权重（如果存在）
+- 支持动态模块导入和实例化
+- 提供统一的分割器构建接口
+"""
+
 import yaml
 import pathlib
 CURR_PATH = pathlib.Path(__file__).parent.resolve()

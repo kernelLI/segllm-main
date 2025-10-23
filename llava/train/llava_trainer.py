@@ -1,3 +1,29 @@
+"""
+SegLLM训练器模块
+提供多模态数据采样、批处理、训练循环和评估功能
+
+输入:
+- datasets: 数据集列表，包含多模态样本
+- weights: 数据集权重，用于多数据集采样
+- batch_size: 批处理大小
+- lengths: 样本长度列表，用于长度分组采样
+- generator: 随机数生成器
+- group_by_modality: 是否按模态分组采样
+
+输出:
+- LengthGroupedSampler: 长度分组采样器实例
+- MultiDatasetBatchSampler: 多数据集批采样器实例
+- LLaVATrainer: LLaVA训练器实例，包含训练循环和评估逻辑
+
+功能:
+- 长度分组采样，提高训练效率
+- 多模态数据采样和批处理
+- 分布式训练支持
+- 训练损失计算和日志记录
+- 模型保存和检查点管理
+- 支持DeepSpeed Zero-3优化
+"""
+
 import os
 import torch
 import re
@@ -518,7 +544,8 @@ class LLaVATrainer(Trainer):
 
                 # len(iou_per_mask) = batch_size * num_rounds (N) 
                 # set eval batch size is to 1, so len(iou_per_mask) = num_rounds 
-                if (visualizations_dir := self.data_args.val_results_visualizations_dir) and np.mean(iou_per_mask)>= 0.7:
+                visualizations_dir = self.data_args.val_results_visualizations_dir
+                if visualizations_dir and np.mean(iou_per_mask)>= 0.7:
                     os.makedirs(visualizations_dir, exist_ok=True)
                     assert self.args.per_device_eval_batch_size == 1
                     input_counter += 1
@@ -709,7 +736,8 @@ class LLaVATrainer(Trainer):
         print(f"Eval Finished: (Step {self.state.global_step}")
 
         # write resuslt string to file
-        if out_file := self.data_args.val_results_save_file:
+        out_file = self.data_args.val_results_save_file
+        if out_file:
             if (self.args.local_rank == 0 or self.args.local_rank == -1 ):
                 out_dir = os.path.dirname(out_file)
                 os.makedirs(out_dir, exist_ok=True)
@@ -770,6 +798,10 @@ class LLaVATrainer(Trainer):
         # For debugging stuck:
         # conv_ids = inputs['extra_replacement']['conv_ids']                                          
         # print("Iter:", self.state.global_step, "Rank:", self.args.local_rank, "Conv ids:", conv_ids)
+
+        # 处理None批次（所有样本图像加载失败）
+        if inputs is None:
+            return torch.tensor(0.0, device=self.args.device, requires_grad=False)
 
         model.train()
         inputs = self._prepare_inputs(inputs)

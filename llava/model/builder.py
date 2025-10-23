@@ -1,3 +1,28 @@
+"""
+SegLLM模型构建器
+负责加载和初始化各种类型的LLaVA模型，包括基础模型和LoRA模型
+
+输入:
+- model_path: 模型路径或HuggingFace模型ID
+- model_base: 基础模型路径（用于LoRA模型）
+- model_name: 模型名称标识
+- load_8bit/load_4bit: 量化加载选项
+- device_map/device: 设备映射和指定
+
+输出:
+- tokenizer: 分词器实例
+- model: 加载的模型实例
+- image_processor: 图像处理器
+- context_len: 模型上下文长度
+
+功能:
+- 支持加载LLaVA模型和纯语言模型
+- 处理LoRA模型的加载和合并
+- 支持8位和4位量化加载
+- 自动处理视觉塔加载和配置
+- 提供统一的模型加载接口
+"""
+
 #    Copyright 2023 Haotian Liu
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
