@@ -247,41 +247,52 @@ class LIDCLongitudinalDataset(Dataset):
                 
         return templates
     
-    def _load_ct_image(self, image_path: str) -> Image.Image:
-        """加载CT图像 - 返回PIL.Image避免双重处理"""
+    def _load_ct_image(self, image_path: str):
+        """加载CT图像，返回(PIL.Image, raw_hu_slice)元组"""
         if image_path.endswith('.nii') or image_path.endswith('.nii.gz'):
-            # 加载NIfTI格式的CT图像
             nii_img = nib.load(image_path)
             ct_data = nii_img.get_fdata()
-            
-            # 选择关键切片（最大投影）
+
+            # 选关键切片
             if len(ct_data.shape) == 3:
-                # 计算每个切片的总强度作为代理指标
                 slice_sums = np.sum(ct_data, axis=(0, 1))
                 slice_idx = np.argmax(slice_sums)
-                ct_slice = ct_data[:, :, slice_idx]
+                hu_slice = ct_data[:, :, slice_idx].astype(np.float32)
             else:
-                ct_slice = ct_data
-                
-            # HU值窗口化：使用配置的肺窗参数
-            # 范围: [window_center - window_width/2, window_center + window_width/2]
-            min_hu = self.ct_window_center - self.ct_window_width // 2
-            max_hu = self.ct_window_center + self.ct_window_width // 2
-            ct_slice = np.clip((ct_slice - min_hu) / (max_hu - min_hu) * 255, 0, 255).astype(np.uint8)
-            
-            # 转换为RGB图像（三通道重复）
-            ct_rgb = np.stack([ct_slice, ct_slice, ct_slice], axis=-1)
-            return Image.fromarray(ct_rgb)
-            
+                hu_slice = ct_data.astype(np.float32)
+
+            # 读配置：优先用新字段 ct_windows，否则回退旧字段
+            if hasattr(self, 'ct_windows') and self.ct_windows:
+                windows = self.ct_windows
+            else:
+                # 回退旧字段（单窗转列表）
+                wc = getattr(self, 'ct_window_center', -600)
+                ww = getattr(self, 'ct_window_width', 1500)
+                windows = [{'center': wc, 'width': ww}]
+
+            # 强制3窗
+            ch_list = []
+            for w in windows[:3]:
+                wc, ww = w['center'], w['width']
+                min_hu = wc - ww // 2
+                max_hu = wc + ww // 2
+                ch = np.clip((hu_slice - min_hu) / (max_hu - min_hu) * 255, 0, 255).astype(np.uint8)
+                ch_list.append(ch)
+            while len(ch_list) < 3:
+                ch_list.append(ch_list[-1])
+            rgb = np.stack(ch_list, axis=-1)
+            return Image.fromarray(rgb), hu_slice
         else:
-            # 普通图像格式
+            # 普通图像格式兜底，也返回虚拟HU全0
             try:
                 with Image.open(image_path) as img:
-                    return img.convert('RGB')
+                    img = img.convert('RGB')
+                    return img, np.zeros((img.height, img.width), dtype=np.float32)
             except Exception as e:
                 logger.error(f"Error loading CT image {image_path}: {str(e)}")
                 # 返回虚拟图像数据 - 使用配置的图像尺寸
-                return Image.new('RGB', (self.default_width, self.default_height), color='black')
+                return Image.new('RGB', (self.default_width, self.default_height), color='black'), \
+                       np.zeros((self.default_height, self.default_width), dtype=np.float32)
     
     def _load_mask(self, mask_path: str) -> torch.Tensor:
         """加载分割掩码"""
@@ -329,13 +340,22 @@ class LIDCLongitudinalDataset(Dataset):
                 # 训练模式返回路径列表 - SegLLM期望的格式
                 # 加载目标掩码（这里仍需加载，因为需要验证数据有效性）
                 target_mask = self._load_mask(conv["masks"]["target"])
-                
-                # 构建输入数据 - 使用'image'键返回路径列表
+
+                # 加载t0/t1并生成变化热图与HU缓存
+                img_t0, hu_t0 = self._load_ct_image(conv["image"][0])
+                img_t1, hu_t1 = self._load_ct_image(conv["image"][1])
+                delta_hu = hu_t1 - hu_t0
+                heatmap = np.clip((delta_hu + 200) / 400 * 255, 0, 255).astype(np.uint8)
+
+                # 构建输入数据
                 data_dict = {
-                    "image": [conv["image"][0], conv["image"][1]],  # 路径列表格式
+                    "image": [conv["image"][0], conv["image"][1]],  # 仍给路径供外部二次加载
                     "masks": target_mask,
                     "conversations": conv["conversations"],
-                    "metadata": conv["metadata"]
+                    "metadata": conv["metadata"],
+                    "hu_t0": hu_t0,          # 新增：原始HU
+                    "hu_t1": hu_t1,          # 新增：原始HU
+                    "change_heatmap": heatmap # 新增：变化热图
                 }
                 
                 return data_dict

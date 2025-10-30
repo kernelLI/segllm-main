@@ -1,8 +1,5 @@
 {
-    // LIDC-IDRI纵向推理分割配置文件
-    // 输入: 该配置文件定义了模型架构、数据处理、训练参数、任务配置等
-    // 输出: 配置被train_longitudinal.py和inference脚本读取，控制模型行为和训练过程
-    // 功能: 提供完整的纵向推理任务配置，包括四种任务类型、权重分配、阈值设置等
+   
     
     "model": {
         "model_name_or_path": "llava-med",
@@ -20,10 +17,15 @@
         "image_folder": "data/lidc_ct_images",
         "voxel_spacing": [1.0, 1.0, 1.0],
         "image_size": [256, 256, 64],
+        "ct_windows": [               
+            {"center": -600, "width": 1500},
+            {"center":    40, "width":  400},
+            {"center":   100, "width":   50}
+        ],
+        "cache_raw_hu": true,          
+        "change_heatmap": true,       
         "normalization": {
-            "window_center": -600,
-            "window_width": 1500,
-            "clip_range": [-1000, 400]
+            "clip_range": [-1000, 400] 
         },
         "augmentation": {
             "enabled": true,

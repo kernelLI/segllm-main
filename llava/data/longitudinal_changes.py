@@ -70,14 +70,14 @@ class LongitudinalChangeCalculator(ChangeCalculator):
         self.diameter_threshold_mm = diameter_threshold_mm
         self.clinical_progression_threshold = clinical_progression_threshold
         
-        # 医学意义阈值
+        # 通用纵向变化阈值（对齐任务.md）
         self.clinical_thresholds = {
-            "volume_progression": 20.0,  # 体积增加超过20%认为进展
-            "volume_regression": -15.0,  # 体积减少超过15%认为退缩
-            "density_progression": 30.0,  # 密度增加超过30HU认为进展
-            "density_regression": -25.0,  # 密度减少超过25HU认为退缩
-            "diameter_progression": 2.0,  # 直径增加超过2mm认为进展
-            "centroid_shift_significant": 5.0  # 质心移动超过5mm认为显著
+            "volume_progression": 20.0,    # 体积增加≥20%认为进展
+            "volume_regression": -15.0,    # 体积减少≥15%认为退缩
+            "density_progression": 30.0,   # 密度增加≥30HU认为进展
+            "density_regression": -25.0,   # 密度减少≥25HU认为退缩
+            "diameter_progression": 2.0,   # 直径增加≥2mm认为进展
+            "centroid_shift_significant": 5.0  # 质心移动≥5mm认为显著
         }
     
     def compute_longitudinal_changes(
@@ -206,12 +206,16 @@ class LongitudinalChangeCalculator(ChangeCalculator):
         boundary = morphology.binary_dilation(mask, morphology.ball(1)) - mask
         
         if np.sum(boundary) == 0:
-        return 0.0
+            return np.nan
         
         # 计算边界区域的梯度
         boundary_ct = ct_image[boundary > 0]
         if len(boundary_ct) == 0:
-            return 0.0
+            return np.nan
+        
+        # 如果 HU 全 0（伪 HU）或全常数，返回 NaN 避免误导
+        if np.allclose(boundary_ct, 0) or np.std(boundary_ct) < 1e-6:
+            return np.nan
         
         # 边界模糊度 = 边界区域HU值的标准差
         margin_blur = np.std(boundary_ct)
