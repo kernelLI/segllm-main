@@ -1,0 +1,23 @@
+{
+  "name": "Chest X-Ray Dataset",
+  "description": "Synthetic chest X-ray dataset for disease classification",
+  "num_samples": 30,
+  "num_annotations": 41,
+  "conditions": {
+    "Effusion": 5,
+    "Atelectasis": 7,
+    "COVID-19": 2,
+    "Lung Cancer": 4,
+    "Normal": 6,
+    "Pneumothorax": 2,
+    "Tuberculosis": 3,
+    "Pneumonia": 1
+  },
+  "image_size": "1024x1024",
+  "modalities": [
+    "X-ray"
+  ],
+  "body_parts": [
+    "Chest"
+  ]
+}

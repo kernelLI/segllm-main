@@ -1,0 +1,15 @@
+{
+  "name": "LUNA16-Style Dataset",
+  "description": "Synthetic lung nodule detection dataset in LUNA16 format",
+  "num_scans": 20,
+  "num_annotations": 18,
+  "num_candidates": 2656,
+  "num_nodules": 18,
+  "positive_candidates": 141,
+  "negative_candidates": 2515,
+  "splits": {
+    "train": 14,
+    "validation": 3,
+    "test": 3
+  }
+}

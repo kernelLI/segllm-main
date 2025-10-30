@@ -1,0 +1,774 @@
+[
+  {
+    "id": "CXR_0000",
+    "patient_id": "Patient_000",
+    "age": 32,
+    "gender": "M",
+    "condition": "Effusion",
+    "severity": "Mild",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "PA",
+    "findings": [
+      {
+        "type": "Effusion",
+        "x": 714,
+        "y": 221,
+        "width": 124,
+        "height": 137,
+        "confidence": 0.8001125833417065
+      }
+    ]
+  },
+  {
+    "id": "CXR_0001",
+    "patient_id": "Patient_001",
+    "age": 39,
+    "gender": "M",
+    "condition": "Atelectasis",
+    "severity": "Severe",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "AP",
+    "findings": [
+      {
+        "type": "Atelectasis",
+        "x": 485,
+        "y": 291,
+        "width": 70,
+        "height": 107,
+        "confidence": 0.8574269294896714
+      },
+      {
+        "type": "Atelectasis",
+        "x": 847,
+        "y": 660,
+        "width": 108,
+        "height": 64,
+        "confidence": 0.8368209952651108
+      }
+    ]
+  },
+  {
+    "id": "CXR_0002",
+    "patient_id": "Patient_002",
+    "age": 68,
+    "gender": "F",
+    "condition": "Effusion",
+    "severity": "Moderate",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "Lateral",
+    "findings": [
+      {
+        "type": "Effusion",
+        "x": 230,
+        "y": 584,
+        "width": 100,
+        "height": 184,
+        "confidence": 0.7511572371061874
+      }
+    ]
+  },
+  {
+    "id": "CXR_0003",
+    "patient_id": "Patient_003",
+    "age": 21,
+    "gender": "M",
+    "condition": "Effusion",
+    "severity": "Moderate",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "AP",
+    "findings": [
+      {
+        "type": "Effusion",
+        "x": 876,
+        "y": 445,
+        "width": 102,
+        "height": 179,
+        "confidence": 0.905269907953647
+      },
+      {
+        "type": "Effusion",
+        "x": 466,
+        "y": 554,
+        "width": 57,
+        "height": 84,
+        "confidence": 0.9727961206236346
+      }
+    ]
+  },
+  {
+    "id": "CXR_0004",
+    "patient_id": "Patient_004",
+    "age": 21,
+    "gender": "F",
+    "condition": "COVID-19",
+    "severity": "Moderate",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "AP",
+    "findings": [
+      {
+        "type": "COVID-19",
+        "x": 665,
+        "y": 205,
+        "width": 53,
+        "height": 103,
+        "confidence": 0.7093939877366675
+      },
+      {
+        "type": "COVID-19",
+        "x": 501,
+        "y": 829,
+        "width": 93,
+        "height": 63,
+        "confidence": 0.9181815987569263
+      }
+    ]
+  },
+  {
+    "id": "CXR_0005",
+    "patient_id": "Patient_005",
+    "age": 79,
+    "gender": "F",
+    "condition": "Effusion",
+    "severity": "Moderate",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "PA",
+    "findings": [
+      {
+        "type": "Effusion",
+        "x": 437,
+        "y": 152,
+        "width": 73,
+        "height": 173,
+        "confidence": 0.782799754606763
+      }
+    ]
+  },
+  {
+    "id": "CXR_0006",
+    "patient_id": "Patient_006",
+    "age": 62,
+    "gender": "M",
+    "condition": "Lung Cancer",
+    "severity": "Severe",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "PA",
+    "findings": [
+      {
+        "type": "Lung Cancer",
+        "x": 620,
+        "y": 443,
+        "width": 178,
+        "height": 185,
+        "confidence": 0.7016566351370807
+      },
+      {
+        "type": "Lung Cancer",
+        "x": 238,
+        "y": 598,
+        "width": 130,
+        "height": 185,
+        "confidence": 0.9187021504122962
+      },
+      {
+        "type": "Lung Cancer",
+        "x": 388,
+        "y": 478,
+        "width": 54,
+        "height": 90,
+        "confidence": 0.9744879026631342
+      }
+    ]
+  },
+  {
+    "id": "CXR_0007",
+    "patient_id": "Patient_007",
+    "age": 89,
+    "gender": "F",
+    "condition": "Normal",
+    "severity": "None",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "AP",
+    "findings": []
+  },
+  {
+    "id": "CXR_0008",
+    "patient_id": "Patient_008",
+    "age": 65,
+    "gender": "M",
+    "condition": "Normal",
+    "severity": "None",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "Lateral",
+    "findings": []
+  },
+  {
+    "id": "CXR_0009",
+    "patient_id": "Patient_009",
+    "age": 61,
+    "gender": "F",
+    "condition": "Pneumothorax",
+    "severity": "Mild",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "AP",
+    "findings": [
+      {
+        "type": "Pneumothorax",
+        "x": 646,
+        "y": 838,
+        "width": 150,
+        "height": 180,
+        "confidence": 0.9282355145850693
+      },
+      {
+        "type": "Pneumothorax",
+        "x": 317,
+        "y": 602,
+        "width": 191,
+        "height": 152,
+        "confidence": 0.7121300768615294
+      },
+      {
+        "type": "Pneumothorax",
+        "x": 306,
+        "y": 114,
+        "width": 139,
+        "height": 91,
+        "confidence": 0.831800950559731
+      }
+    ]
+  },
+  {
+    "id": "CXR_0010",
+    "patient_id": "Patient_010",
+    "age": 69,
+    "gender": "M",
+    "condition": "Tuberculosis",
+    "severity": "Severe",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "AP",
+    "findings": [
+      {
+        "type": "Tuberculosis",
+        "x": 506,
+        "y": 330,
+        "width": 192,
+        "height": 78,
+        "confidence": 0.7686394496474867
+      }
+    ]
+  },
+  {
+    "id": "CXR_0011",
+    "patient_id": "Patient_011",
+    "age": 76,
+    "gender": "M",
+    "condition": "Atelectasis",
+    "severity": "Severe",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "AP",
+    "findings": [
+      {
+        "type": "Atelectasis",
+        "x": 781,
+        "y": 656,
+        "width": 111,
+        "height": 183,
+        "confidence": 0.836960371144873
+      },
+      {
+        "type": "Atelectasis",
+        "x": 719,
+        "y": 655,
+        "width": 133,
+        "height": 79,
+        "confidence": 0.9649840776756604
+      }
+    ]
+  },
+  {
+    "id": "CXR_0012",
+    "patient_id": "Patient_012",
+    "age": 79,
+    "gender": "M",
+    "condition": "Atelectasis",
+    "severity": "Moderate",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "PA",
+    "findings": [
+      {
+        "type": "Atelectasis",
+        "x": 382,
+        "y": 732,
+        "width": 165,
+        "height": 52,
+        "confidence": 0.7020856391593572
+      }
+    ]
+  },
+  {
+    "id": "CXR_0013",
+    "patient_id": "Patient_013",
+    "age": 26,
+    "gender": "F",
+    "condition": "Atelectasis",
+    "severity": "Severe",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "PA",
+    "findings": [
+      {
+        "type": "Atelectasis",
+        "x": 333,
+        "y": 783,
+        "width": 108,
+        "height": 167,
+        "confidence": 0.765629265871921
+      }
+    ]
+  },
+  {
+    "id": "CXR_0014",
+    "patient_id": "Patient_014",
+    "age": 69,
+    "gender": "M",
+    "condition": "Atelectasis",
+    "severity": "Mild",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "AP",
+    "findings": [
+      {
+        "type": "Atelectasis",
+        "x": 541,
+        "y": 663,
+        "width": 61,
+        "height": 88,
+        "confidence": 0.8491745517677156
+      }
+    ]
+  },
+  {
+    "id": "CXR_0015",
+    "patient_id": "Patient_015",
+    "age": 73,
+    "gender": "M",
+    "condition": "Normal",
+    "severity": "None",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "Lateral",
+    "findings": []
+  },
+  {
+    "id": "CXR_0016",
+    "patient_id": "Patient_016",
+    "age": 19,
+    "gender": "F",
+    "condition": "Normal",
+    "severity": "None",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "AP",
+    "findings": []
+  },
+  {
+    "id": "CXR_0017",
+    "patient_id": "Patient_017",
+    "age": 18,
+    "gender": "M",
+    "condition": "Effusion",
+    "severity": "Mild",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "AP",
+    "findings": [
+      {
+        "type": "Effusion",
+        "x": 152,
+        "y": 783,
+        "width": 117,
+        "height": 172,
+        "confidence": 0.7726479814832278
+      },
+      {
+        "type": "Effusion",
+        "x": 393,
+        "y": 379,
+        "width": 118,
+        "height": 165,
+        "confidence": 0.9950269422684529
+      }
+    ]
+  },
+  {
+    "id": "CXR_0018",
+    "patient_id": "Patient_018",
+    "age": 33,
+    "gender": "M",
+    "condition": "Pneumothorax",
+    "severity": "Severe",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "PA",
+    "findings": [
+      {
+        "type": "Pneumothorax",
+        "x": 425,
+        "y": 563,
+        "width": 142,
+        "height": 52,
+        "confidence": 0.8772678829564725
+      },
+      {
+        "type": "Pneumothorax",
+        "x": 502,
+        "y": 445,
+        "width": 196,
+        "height": 197,
+        "confidence": 0.8935518371228349
+      },
+      {
+        "type": "Pneumothorax",
+        "x": 588,
+        "y": 739,
+        "width": 88,
+        "height": 131,
+        "confidence": 0.9513130317721984
+      }
+    ]
+  },
+  {
+    "id": "CXR_0019",
+    "patient_id": "Patient_019",
+    "age": 67,
+    "gender": "M",
+    "condition": "Tuberculosis",
+    "severity": "Mild",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "Lateral",
+    "findings": [
+      {
+        "type": "Tuberculosis",
+        "x": 397,
+        "y": 710,
+        "width": 56,
+        "height": 193,
+        "confidence": 0.9451666600603648
+      },
+      {
+        "type": "Tuberculosis",
+        "x": 671,
+        "y": 101,
+        "width": 178,
+        "height": 97,
+        "confidence": 0.989625805386638
+      }
+    ]
+  },
+  {
+    "id": "CXR_0020",
+    "patient_id": "Patient_020",
+    "age": 49,
+    "gender": "M",
+    "condition": "Lung Cancer",
+    "severity": "Mild",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "Lateral",
+    "findings": [
+      {
+        "type": "Lung Cancer",
+        "x": 332,
+        "y": 198,
+        "width": 196,
+        "height": 97,
+        "confidence": 0.9539983426714918
+      }
+    ]
+  },
+  {
+    "id": "CXR_0021",
+    "patient_id": "Patient_021",
+    "age": 50,
+    "gender": "F",
+    "condition": "COVID-19",
+    "severity": "Moderate",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "Lateral",
+    "findings": [
+      {
+        "type": "COVID-19",
+        "x": 519,
+        "y": 521,
+        "width": 153,
+        "height": 133,
+        "confidence": 0.8742059864309364
+      }
+    ]
+  },
+  {
+    "id": "CXR_0022",
+    "patient_id": "Patient_022",
+    "age": 42,
+    "gender": "M",
+    "condition": "Atelectasis",
+    "severity": "Moderate",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "AP",
+    "findings": [
+      {
+        "type": "Atelectasis",
+        "x": 437,
+        "y": 805,
+        "width": 103,
+        "height": 117,
+        "confidence": 0.77117472624904
+      },
+      {
+        "type": "Atelectasis",
+        "x": 376,
+        "y": 603,
+        "width": 177,
+        "height": 185,
+        "confidence": 0.9547670231482533
+      }
+    ]
+  },
+  {
+    "id": "CXR_0023",
+    "patient_id": "Patient_023",
+    "age": 50,
+    "gender": "F",
+    "condition": "Normal",
+    "severity": "None",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "Lateral",
+    "findings": []
+  },
+  {
+    "id": "CXR_0024",
+    "patient_id": "Patient_024",
+    "age": 39,
+    "gender": "F",
+    "condition": "Tuberculosis",
+    "severity": "Moderate",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "AP",
+    "findings": [
+      {
+        "type": "Tuberculosis",
+        "x": 329,
+        "y": 464,
+        "width": 100,
+        "height": 57,
+        "confidence": 0.8893415877991788
+      },
+      {
+        "type": "Tuberculosis",
+        "x": 325,
+        "y": 376,
+        "width": 79,
+        "height": 146,
+        "confidence": 0.8730711653879077
+      }
+    ]
+  },
+  {
+    "id": "CXR_0025",
+    "patient_id": "Patient_025",
+    "age": 86,
+    "gender": "F",
+    "condition": "Atelectasis",
+    "severity": "Mild",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "PA",
+    "findings": [
+      {
+        "type": "Atelectasis",
+        "x": 615,
+        "y": 646,
+        "width": 98,
+        "height": 66,
+        "confidence": 0.9983651532392024
+      },
+      {
+        "type": "Atelectasis",
+        "x": 257,
+        "y": 576,
+        "width": 95,
+        "height": 166,
+        "confidence": 0.9650482066798777
+      },
+      {
+        "type": "Atelectasis",
+        "x": 844,
+        "y": 136,
+        "width": 73,
+        "height": 142,
+        "confidence": 0.8284552444951943
+      }
+    ]
+  },
+  {
+    "id": "CXR_0026",
+    "patient_id": "Patient_026",
+    "age": 77,
+    "gender": "M",
+    "condition": "Lung Cancer",
+    "severity": "Severe",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "Lateral",
+    "findings": [
+      {
+        "type": "Lung Cancer",
+        "x": 260,
+        "y": 355,
+        "width": 116,
+        "height": 177,
+        "confidence": 0.8118060601282148
+      }
+    ]
+  },
+  {
+    "id": "CXR_0027",
+    "patient_id": "Patient_027",
+    "age": 71,
+    "gender": "F",
+    "condition": "Pneumonia",
+    "severity": "Severe",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "Lateral",
+    "findings": [
+      {
+        "type": "Pneumonia",
+        "x": 891,
+        "y": 725,
+        "width": 81,
+        "height": 135,
+        "confidence": 0.8075940343888491
+      },
+      {
+        "type": "Pneumonia",
+        "x": 738,
+        "y": 254,
+        "width": 179,
+        "height": 66,
+        "confidence": 0.9546009384774023
+      }
+    ]
+  },
+  {
+    "id": "CXR_0028",
+    "patient_id": "Patient_028",
+    "age": 60,
+    "gender": "F",
+    "condition": "Normal",
+    "severity": "None",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "Lateral",
+    "findings": []
+  },
+  {
+    "id": "CXR_0029",
+    "patient_id": "Patient_029",
+    "age": 43,
+    "gender": "M",
+    "condition": "Lung Cancer",
+    "severity": "Moderate",
+    "image_size": [
+      1024,
+      1024
+    ],
+    "view": "AP",
+    "findings": [
+      {
+        "type": "Lung Cancer",
+        "x": 507,
+        "y": 624,
+        "width": 109,
+        "height": 184,
+        "confidence": 0.8504548884061598
+      }
+    ]
+  }
+]

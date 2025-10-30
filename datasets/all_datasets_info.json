@@ -1,0 +1,25 @@
+{
+  "datasets": [
+    {
+      "name": "medical_synthetic",
+      "path": "datasets\\medical_synthetic",
+      "type": "synthetic",
+      "modality": "multi-modal",
+      "num_samples": 50
+    },
+    {
+      "name": "luna16_style",
+      "path": "datasets\\luna16_style",
+      "type": "lung_nodule_detection",
+      "modality": "CT",
+      "num_samples": 20
+    },
+    {
+      "name": "chest_xray",
+      "path": "datasets\\chest_xray",
+      "type": "chest_xray_classification",
+      "modality": "X-ray",
+      "num_samples": 30
+    }
+  ]
+}

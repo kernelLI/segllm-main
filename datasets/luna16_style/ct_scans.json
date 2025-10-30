@@ -1,0 +1,604 @@
+[
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000000",
+    "patient_id": "LND_000",
+    "slice_thickness": 1.3116262258099887,
+    "pixel_spacing": [
+      0.7901428612819833,
+      0.746398788362281
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      288
+    ],
+    "scan_date": "2024-01-01",
+    "manufacturer": "GE",
+    "nodules": []
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000001",
+    "patient_id": "LND_001",
+    "slice_thickness": 0.8963895886387849,
+    "pixel_spacing": [
+      0.6116167224336398,
+      0.7732352291549871
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      199
+    ],
+    "scan_date": "2024-01-02",
+    "manufacturer": "Toshiba",
+    "nodules": [
+      {
+        "id": "Nodule_0_1",
+        "coordX": 93.98197043239887,
+        "coordY": 66.48852816008434,
+        "coordZ": -28.766088932172384,
+        "diameter_mm": 7.9092741145917165,
+        "volume_mm3": 957.8523237744974,
+        "malignancy": "malignant",
+        "subtlety": 5,
+        "sphericity": 0.7159725093210578,
+        "margin": 0.645614570099021,
+        "lobulation": 0.6118528947223795,
+        "spiculation": 0.13949386065204183
+      }
+    ]
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000002",
+    "patient_id": "LND_002",
+    "slice_thickness": 1.1550748322169144,
+    "pixel_spacing": [
+      0.6732723686587383,
+      0.6912139968434072
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      274
+    ],
+    "scan_date": "2024-01-03",
+    "manufacturer": "Siemens",
+    "nodules": []
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000003",
+    "patient_id": "LND_003",
+    "slice_thickness": 1.5770454329858619,
+    "pixel_spacing": [
+      0.7184829137724085,
+      0.6092900825439995
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      150
+    ],
+    "scan_date": "2024-01-04",
+    "manufacturer": "Philips",
+    "nodules": []
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000004",
+    "patient_id": "LND_004",
+    "slice_thickness": 0.723598026672031,
+    "pixel_spacing": [
+      0.7897771074506666,
+      0.793126406614912
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      108
+    ],
+    "scan_date": "2024-01-05",
+    "manufacturer": "Siemens",
+    "nodules": []
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000005",
+    "patient_id": "LND_005",
+    "slice_thickness": 1.9000427503730979,
+    "pixel_spacing": [
+      0.6880304987479202,
+      0.6244076469689558
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      107
+    ],
+    "scan_date": "2024-01-06",
+    "manufacturer": "Philips",
+    "nodules": []
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000006",
+    "patient_id": "LND_006",
+    "slice_thickness": 1.3430151543891573,
+    "pixel_spacing": [
+      0.6364472175576125,
+      0.7510722820635305
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      233
+    ],
+    "scan_date": "2024-01-07",
+    "manufacturer": "Siemens",
+    "nodules": [
+      {
+        "id": "Nodule_0_6",
+        "coordX": 93.91692555291172,
+        "coordY": 55.02656467222292,
+        "coordZ": 43.94989415641891,
+        "diameter_mm": 27.16033846154652,
+        "volume_mm3": 3009.6048951148714,
+        "malignancy": "uncertain",
+        "subtlety": 4,
+        "sphericity": 0.522613644455269,
+        "margin": 0.6626651653816322,
+        "lobulation": 0.388677289689482,
+        "spiculation": 0.2713490317738959
+      }
+    ]
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000007",
+    "patient_id": "LND_007",
+    "slice_thickness": 2.1746012673886654,
+    "pixel_spacing": [
+      0.6713506653387179,
+      0.6561869019374762
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      223
+    ],
+    "scan_date": "2024-01-08",
+    "manufacturer": "GE",
+    "nodules": []
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000008",
+    "patient_id": "LND_008",
+    "slice_thickness": 2.1241742634326752,
+    "pixel_spacing": [
+      0.6149101287359542,
+      0.7973773873201035
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      187
+    ],
+    "scan_date": "2024-01-09",
+    "manufacturer": "GE",
+    "nodules": []
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000009",
+    "patient_id": "LND_009",
+    "slice_thickness": 0.6104920225348446,
+    "pixel_spacing": [
+      0.7630922856909669,
+      0.7413714687695234
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      262
+    ],
+    "scan_date": "2024-01-10",
+    "manufacturer": "Philips",
+    "nodules": [
+      {
+        "id": "Nodule_0_9",
+        "coordX": -28.306854291145484,
+        "coordY": -76.82618809497406,
+        "coordZ": 36.31034258755935,
+        "diameter_mm": 19.829049424344063,
+        "volume_mm3": 1687.9452230206134,
+        "malignancy": "uncertain",
+        "subtlety": 5,
+        "sphericity": 0.864803089169032,
+        "margin": 0.8187787356776066,
+        "lobulation": 0.8872127425763265,
+        "spiculation": 0.4722149251619493
+      }
+    ]
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000010",
+    "patient_id": "LND_010",
+    "slice_thickness": 0.8272290672827732,
+    "pixel_spacing": [
+      0.742648957444599,
+      0.7521570097233795
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      241
+    ],
+    "scan_date": "2024-01-11",
+    "manufacturer": "Philips",
+    "nodules": []
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000011",
+    "patient_id": "LND_011",
+    "slice_thickness": 1.950259490402996,
+    "pixel_spacing": [
+      0.6221781641623663,
+      0.687867300373154
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      278
+    ],
+    "scan_date": "2024-01-12",
+    "manufacturer": "Philips",
+    "nodules": [
+      {
+        "id": "Nodule_0_11",
+        "coordX": -72.13370911882487,
+        "coordY": 20.883475855563447,
+        "coordZ": 3.9841091301673117,
+        "diameter_mm": 8.482653067838774,
+        "volume_mm3": 4717.125174262006,
+        "malignancy": "uncertain",
+        "subtlety": 3,
+        "sphericity": 0.8473924665198522,
+        "margin": 0.9402339195076288,
+        "lobulation": 0.6243540481337932,
+        "spiculation": 0.295633685837714
+      },
+      {
+        "id": "Nodule_1_11",
+        "coordX": -78.90114803394587,
+        "coordY": -8.693085903417952,
+        "coordZ": -28.15595627831664,
+        "diameter_mm": 14.245768592499887,
+        "volume_mm3": 4422.2372816483985,
+        "malignancy": "malignant",
+        "subtlety": 4,
+        "sphericity": 0.6781489190384875,
+        "margin": 0.9534142207728771,
+        "lobulation": 0.2721322493846353,
+        "spiculation": 0.6476901205413623
+      },
+      {
+        "id": "Nodule_2_11",
+        "coordX": -99.89592460093684,
+        "coordY": -29.4862287331662,
+        "coordZ": -19.521874184197095,
+        "diameter_mm": 7.445708034859427,
+        "volume_mm3": 2693.7426259084377,
+        "malignancy": "malignant",
+        "subtlety": 5,
+        "sphericity": 0.8462180164451352,
+        "margin": 0.6347061668992607,
+        "lobulation": 0.24412552224777417,
+        "spiculation": 0.16829104217293056
+      }
+    ]
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000012",
+    "patient_id": "LND_012",
+    "slice_thickness": 1.0156520171888335,
+    "pixel_spacing": [
+      0.7116204004034683,
+      0.6807672342116082
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      161
+    ],
+    "scan_date": "2024-01-13",
+    "manufacturer": "GE",
+    "nodules": [
+      {
+        "id": "Nodule_0_12",
+        "coordX": 39.260854567957665,
+        "coordY": 42.4541179848884,
+        "coordZ": -35.19130700466001,
+        "diameter_mm": 29.93899309632143,
+        "volume_mm3": 1370.5660206626608,
+        "malignancy": "malignant",
+        "subtlety": 2,
+        "sphericity": 0.7055185066591156,
+        "margin": 0.5165253664502742,
+        "lobulation": 0.345071248026683,
+        "spiculation": 0.6343513447013638
+      }
+    ]
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000013",
+    "patient_id": "LND_013",
+    "slice_thickness": 1.8933403579540569,
+    "pixel_spacing": [
+      0.7061869166634273,
+      0.6895566329146183
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      297
+    ],
+    "scan_date": "2024-01-14",
+    "manufacturer": "Toshiba",
+    "nodules": [
+      {
+        "id": "Nodule_0_13",
+        "coordX": -26.069108787719102,
+        "coordY": -51.56801234451483,
+        "coordZ": 30.313975637989586,
+        "diameter_mm": 15.698117130043038,
+        "volume_mm3": 4917.944547429473,
+        "malignancy": "malignant",
+        "subtlety": 3,
+        "sphericity": 0.908215936609692,
+        "margin": 0.8991725624922755,
+        "lobulation": 0.15071754396542947,
+        "spiculation": 0.5081987767407187
+      }
+    ]
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000014",
+    "patient_id": "LND_014",
+    "slice_thickness": 1.9220443329026753,
+    "pixel_spacing": [
+      0.771671760962744,
+      0.6651917810403769
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      263
+    ],
+    "scan_date": "2024-01-15",
+    "manufacturer": "Philips",
+    "nodules": [
+      {
+        "id": "Nodule_0_14",
+        "coordX": -80.76468978171584,
+        "coordY": 88.1046528979208,
+        "coordZ": -10.242797891247768,
+        "diameter_mm": 16.979286464241962,
+        "volume_mm3": 4196.665024241273,
+        "malignancy": "uncertain",
+        "subtlety": 4,
+        "sphericity": 0.8676080596203861,
+        "margin": 0.6045358103688568,
+        "lobulation": 0.5414479738275658,
+        "spiculation": 0.6957843993450822
+      },
+      {
+        "id": "Nodule_1_14",
+        "coordX": -54.28999564054007,
+        "coordY": -65.00901458081276,
+        "coordZ": 48.21683433294356,
+        "diameter_mm": 16.949169064317385,
+        "volume_mm3": 1341.1044154105246,
+        "malignancy": "benign",
+        "subtlety": 4,
+        "sphericity": 0.7791467268035488,
+        "margin": 0.9413181715946699,
+        "lobulation": 0.18870710834137938,
+        "spiculation": 0.2788713525921819
+      }
+    ]
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000015",
+    "patient_id": "LND_015",
+    "slice_thickness": 1.9306798769482656,
+    "pixel_spacing": [
+      0.7693322284476612,
+      0.7712648583756185
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      153
+    ],
+    "scan_date": "2024-01-16",
+    "manufacturer": "Toshiba",
+    "nodules": [
+      {
+        "id": "Nodule_0_15",
+        "coordX": -25.543446687651382,
+        "coordY": 88.02668849155569,
+        "coordZ": 47.366383675531736,
+        "diameter_mm": 10.665866317911574,
+        "volume_mm3": 1561.5511087047475,
+        "malignancy": "malignant",
+        "subtlety": 3,
+        "sphericity": 0.8259806297513003,
+        "margin": 0.61213465473028,
+        "lobulation": 0.7121792213475359,
+        "spiculation": 0.23724908749680007
+      },
+      {
+        "id": "Nodule_1_15",
+        "coordX": -34.92006036814645,
+        "coordY": 49.29828102360483,
+        "coordZ": 14.963289904721464,
+        "diameter_mm": 25.929032083342804,
+        "volume_mm3": 3305.1838168867,
+        "malignancy": "benign",
+        "subtlety": 4,
+        "sphericity": 0.75440703841938,
+        "margin": 0.8181663090929476,
+        "lobulation": 0.25046181860558414,
+        "spiculation": 0.5898708475605439
+      },
+      {
+        "id": "Nodule_2_15",
+        "coordX": 95.7785716550018,
+        "coordY": -2.6515694081089833,
+        "coordZ": 40.609878771855406,
+        "diameter_mm": 14.728647868781573,
+        "volume_mm3": 1782.8881180886447,
+        "malignancy": "benign",
+        "subtlety": 4,
+        "sphericity": 0.8344620298315498,
+        "margin": 0.9320837825359516,
+        "lobulation": 0.23018526824155527,
+        "spiculation": 0.4991933798847523
+      },
+      {
+        "id": "Nodule_3_15",
+        "coordX": 14.400839841836614,
+        "coordY": 53.71080286126181,
+        "coordZ": -45.639622824556625,
+        "diameter_mm": 29.852863791528208,
+        "volume_mm3": 2376.225344255168,
+        "malignancy": "malignant",
+        "subtlety": 5,
+        "sphericity": 0.9417470111331294,
+        "margin": 0.873859386948707,
+        "lobulation": 0.9530718470239532,
+        "spiculation": 0.3307503046705137
+      },
+      {
+        "id": "Nodule_4_15",
+        "coordX": 10.552993367097983,
+        "coordY": 14.458493834167669,
+        "coordZ": 48.03315837160457,
+        "diameter_mm": 5.034348912165462,
+        "volume_mm3": 1563.2002454715503,
+        "malignancy": "uncertain",
+        "subtlety": 1,
+        "sphericity": 0.6584610025781388,
+        "margin": 0.5847463733430462,
+        "lobulation": 0.5568012624583502,
+        "spiculation": 0.936154774160781
+      }
+    ]
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000016",
+    "patient_id": "LND_016",
+    "slice_thickness": 1.9224566136824488,
+    "pixel_spacing": [
+      0.714012234017873,
+      0.6194352987541537
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      131
+    ],
+    "scan_date": "2024-01-17",
+    "manufacturer": "Philips",
+    "nodules": [
+      {
+        "id": "Nodule_0_16",
+        "coordX": 3.6659304727473483,
+        "coordY": 75.47461438559108,
+        "coordZ": 24.07686177542044,
+        "diameter_mm": 21.819425006872237,
+        "volume_mm3": 3527.296215736191,
+        "malignancy": "uncertain",
+        "subtlety": 5,
+        "sphericity": 0.6482550718238993,
+        "margin": 0.7098904282231382,
+        "lobulation": 0.25620694359445806,
+        "spiculation": 0.6115137108656805
+      }
+    ]
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000017",
+    "patient_id": "LND_017",
+    "slice_thickness": 0.7550289427604566,
+    "pixel_spacing": [
+      0.6010369725547974,
+      0.7255788829897272
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      119
+    ],
+    "scan_date": "2024-01-18",
+    "manufacturer": "GE",
+    "nodules": []
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000018",
+    "patient_id": "LND_018",
+    "slice_thickness": 1.3538892717063877,
+    "pixel_spacing": [
+      0.6101537062078793,
+      0.777323429790132
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      242
+    ],
+    "scan_date": "2024-01-19",
+    "manufacturer": "Toshiba",
+    "nodules": [
+      {
+        "id": "Nodule_0_18",
+        "coordX": -34.36946650505361,
+        "coordY": -68.99167665445117,
+        "coordZ": 48.1840888310531,
+        "diameter_mm": 25.65120455587281,
+        "volume_mm3": 4309.002860642792,
+        "malignancy": "benign",
+        "subtlety": 4,
+        "sphericity": 0.5194173672147115,
+        "margin": 0.6516327573366114,
+        "lobulation": 0.5370824271966554,
+        "spiculation": 0.3266512417960409
+      },
+      {
+        "id": "Nodule_1_18",
+        "coordX": 65.57380075751774,
+        "coordY": -45.69141683605162,
+        "coordZ": 46.52518303907698,
+        "diameter_mm": 15.34615936357067,
+        "volume_mm3": 4218.014221309308,
+        "malignancy": "malignant",
+        "subtlety": 3,
+        "sphericity": 0.8187149507491033,
+        "margin": 0.8630456668613308,
+        "lobulation": 0.9758520794625346,
+        "spiculation": 0.5163003483011953
+      }
+    ]
+  },
+  {
+    "seriesuid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.000000000019",
+    "patient_id": "LND_019",
+    "slice_thickness": 1.2136172985883673,
+    "pixel_spacing": [
+      0.7590372389537408,
+      0.6541664502524148
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      191
+    ],
+    "scan_date": "2024-01-20",
+    "manufacturer": "Siemens",
+    "nodules": []
+  }
+]

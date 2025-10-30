@@ -1,0 +1,37 @@
+{
+  "name": "LUNA16-HF",
+  "description": "LUNA16 Lung Nodule Detection Dataset - Hugging Face Compatible Version",
+  "version": "1.0.0",
+  "num_samples": 10,
+  "num_annotations": 11,
+  "num_candidates": 107,
+  "classes": {
+    "nodule": {
+      "count": 11
+    },
+    "no_nodule": {
+      "count": 81
+    }
+  },
+  "features": {
+    "scan": {
+      "dtype": "dict",
+      "description": "CT scan metadata"
+    },
+    "nodules": {
+      "dtype": "list",
+      "description": "List of detected nodules"
+    }
+  },
+  "splits": {
+    "train": {
+      "num_examples": 7
+    },
+    "validation": {
+      "num_examples": 1
+    },
+    "test": {
+      "num_examples": 1
+    }
+  }
+}

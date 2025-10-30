@@ -1,0 +1,265 @@
+[
+  {
+    "id": "LUNA16_0000",
+    "patient_id": "Patient_000",
+    "scan_date": "2024-01-01",
+    "slice_thickness": 1.249080237694725,
+    "pixel_spacing": [
+      1.4507143064099162,
+      1.231993941811405
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      288
+    ],
+    "nodules": []
+  },
+  {
+    "id": "LUNA16_0001",
+    "patient_id": "Patient_001",
+    "scan_date": "2024-01-02",
+    "slice_thickness": 0.812037280884873,
+    "pixel_spacing": [
+      0.6559945203362026,
+      0.5580836121681995
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      187
+    ],
+    "nodules": []
+  },
+  {
+    "id": "LUNA16_0002",
+    "patient_id": "Patient_002",
+    "scan_date": "2024-01-03",
+    "slice_thickness": 1.7022300234864176,
+    "pixel_spacing": [
+      1.2080725777960455,
+      0.5205844942958024
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      101
+    ],
+    "nodules": [
+      {
+        "id": "Nodule_0_2",
+        "x": 343,
+        "y": 435,
+        "z": 79,
+        "diameter_mm": 7.951921766042713,
+        "malignancy": "malignant",
+        "confidence": 0.8574269294896714
+      },
+      {
+        "id": "Nodule_1_2",
+        "x": 285,
+        "y": 394,
+        "z": 68,
+        "diameter_mm": 17.16891582697651,
+        "malignancy": "unknown",
+        "confidence": 0.7418481581956126
+      },
+      {
+        "id": "Nodule_2_2",
+        "x": 237,
+        "y": 320,
+        "z": 66,
+        "diameter_mm": 19.696422251993358,
+        "malignancy": "unknown",
+        "confidence": 0.9949692657420365
+      }
+    ]
+  },
+  {
+    "id": "LUNA16_0003",
+    "patient_id": "Patient_003",
+    "scan_date": "2024-01-04",
+    "slice_thickness": 1.4335257864959599,
+    "pixel_spacing": [
+      1.3599404067363206,
+      1.1803075385877797
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      172
+    ],
+    "nodules": [
+      {
+        "id": "Nodule_0_3",
+        "x": 323,
+        "y": 437,
+        "z": 108,
+        "diameter_mm": 29.072064893013103,
+        "malignancy": "malignant",
+        "confidence": 0.8156249507619748
+      },
+      {
+        "id": "Nodule_1_3",
+        "x": 395,
+        "y": 102,
+        "z": 149,
+        "diameter_mm": 21.474291715828237,
+        "malignancy": "unknown",
+        "confidence": 0.9049790556476375
+      }
+    ]
+  },
+  {
+    "id": "LUNA16_0004",
+    "patient_id": "Patient_004",
+    "scan_date": "2024-01-05",
+    "slice_thickness": 1.7199933155652418,
+    "pixel_spacing": [
+      1.3331949117361643,
+      0.6733646535077721
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      180
+    ],
+    "nodules": [
+      {
+        "id": "Nodule_0_4",
+        "x": 99,
+        "y": 409,
+        "z": 151,
+        "diameter_mm": 11.416199054414095,
+        "malignancy": "malignant",
+        "confidence": 0.7623824988604566
+      },
+      {
+        "id": "Nodule_1_4",
+        "x": 309,
+        "y": 359,
+        "z": 63,
+        "diameter_mm": 28.366471422233108,
+        "malignancy": "malignant",
+        "confidence": 0.9779976597381382
+      },
+      {
+        "id": "Nodule_2_4",
+        "x": 400,
+        "y": 353,
+        "z": 34,
+        "diameter_mm": 5.389297555401827,
+        "malignancy": "unknown",
+        "confidence": 0.8562502780077471
+      }
+    ]
+  },
+  {
+    "id": "LUNA16_0005",
+    "patient_id": "Patient_005",
+    "scan_date": "2024-01-06",
+    "slice_thickness": 2.4223440486986982,
+    "pixel_spacing": [
+      1.3445338486781515,
+      1.2473201101373808
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      210
+    ],
+    "nodules": []
+  },
+  {
+    "id": "LUNA16_0006",
+    "patient_id": "Patient_006",
+    "scan_date": "2024-01-07",
+    "slice_thickness": 1.6735023313276964,
+    "pixel_spacing": [
+      1.465255307264138,
+      1.1070342476866846
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      140
+    ],
+    "nodules": []
+  },
+  {
+    "id": "LUNA16_0007",
+    "patient_id": "Patient_007",
+    "scan_date": "2024-01-08",
+    "slice_thickness": 2.1043939615080793,
+    "pixel_spacing": [
+      0.5745506436797708,
+      1.4868869366005173
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      187
+    ],
+    "nodules": []
+  },
+  {
+    "id": "LUNA16_0008",
+    "patient_id": "Patient_008",
+    "scan_date": "2024-01-09",
+    "slice_thickness": 0.8974313630683448,
+    "pixel_spacing": [
+      0.5055221171236024,
+      1.3154614284548343
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      180
+    ],
+    "nodules": [
+      {
+        "id": "Nodule_0_8",
+        "x": 212,
+        "y": 338,
+        "z": 142,
+        "diameter_mm": 4.99920559682044,
+        "malignancy": "unknown",
+        "confidence": 0.8953231076505833
+      },
+      {
+        "id": "Nodule_1_8",
+        "x": 77,
+        "y": 184,
+        "z": 91,
+        "diameter_mm": 15.135168201731492,
+        "malignancy": "benign",
+        "confidence": 0.7190675050858071
+      },
+      {
+        "id": "Nodule_2_8",
+        "x": 111,
+        "y": 265,
+        "z": 56,
+        "diameter_mm": 22.69936681512773,
+        "malignancy": "malignant",
+        "confidence": 0.9661638227728979
+      }
+    ]
+  },
+  {
+    "id": "LUNA16_0009",
+    "patient_id": "Patient_009",
+    "scan_date": "2024-01-10",
+    "slice_thickness": 1.4444298503238986,
+    "pixel_spacing": [
+      0.6195942459383017,
+      1.213244787222995
+    ],
+    "image_dimensions": [
+      512,
+      512,
+      100
+    ],
+    "nodules": []
+  }
+]

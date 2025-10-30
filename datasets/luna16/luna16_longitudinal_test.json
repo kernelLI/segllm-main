@@ -1,0 +1,63 @@
+{
+  "samples": [
+    {
+      "id": "patient_001",
+      "image_t0_path": "scans/patient_001_t0.mhd",
+      "image_t1_path": "scans/patient_001_t1.mhd",
+      "mask_paths": [
+        "masks/patient_001_nodule1.nii",
+        "masks/patient_001_nodule2.nii"
+      ],
+      "task_type": "nodule_detection",
+      "changes": "检测到新的肺结节，直径约5mm",
+      "metadata": {
+        "spacing": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "dimensions": [
+          512,
+          512,
+          100
+        ],
+        "scan_date_t0": "2023-01-15",
+        "scan_date_t1": "2023-06-20"
+      }
+    },
+    {
+      "id": "patient_002",
+      "image_t0_path": "scans/patient_002_t0.mhd",
+      "image_t1_path": "scans/patient_002_t1.mhd",
+      "mask_paths": [
+        "masks/patient_002_nodule1.nii"
+      ],
+      "task_type": "nodule_growth",
+      "changes": "肺结节增大，从3mm增长到8mm",
+      "metadata": {
+        "spacing": [
+          0.8,
+          0.8,
+          1.5
+        ],
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "dimensions": [
+          512,
+          512,
+          120
+        ],
+        "scan_date_t0": "2023-03-10",
+        "scan_date_t1": "2023-09-15"
+      }
+    }
+  ]
+}

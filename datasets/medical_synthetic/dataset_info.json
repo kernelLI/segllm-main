@@ -1,0 +1,27 @@
+{
+  "name": "medical_synthetic",
+  "description": "Synthetic medical imaging dataset for development and testing",
+  "num_samples": 50,
+  "num_annotations": 97,
+  "modalities": [
+    "X-ray",
+    "Ultrasound",
+    "CT",
+    "MRI"
+  ],
+  "body_parts": [
+    "Chest",
+    "Bone",
+    "Abdomen",
+    "Brain"
+  ],
+  "finding_types": [
+    "Fluid",
+    "Cyst",
+    "Nodule",
+    "Calcification",
+    "Inflammation",
+    "Mass",
+    "Fracture"
+  ]
+}

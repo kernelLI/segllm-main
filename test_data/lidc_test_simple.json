@@ -1,0 +1,38 @@
+[
+  {
+    "id": "simple_001",
+    "image_paths": ["ct_scan_t0.dcm", "ct_scan_t1.dcm"],
+    "findings": "右肺上叶见一磨玻璃密度结节，边界清晰，直径约8mm，较前片对比无明显变化。",
+    "comparison": "与2023年1月前片对比，结节大小、密度、形态基本稳定。",
+    "impression": "右肺上叶磨玻璃结节，考虑良性病变，建议6个月后复查。",
+    "metadata": {
+      "patient_id": "S001",
+      "scan_date": "2023-07-15",
+      "language": "chinese"
+    }
+  },
+  {
+    "id": "simple_002",
+    "image_paths": ["ct_scan_t0.dcm", "ct_scan_t1.dcm"],
+    "findings": "A solid nodule is identified in the left lower lobe, measuring approximately 12mm in diameter with smooth margins.",
+    "comparison": "This nodule was not present on the previous CT scan from March 2023.",
+    "impression": "New solid nodule in left lower lobe, recommend follow-up CT in 3 months to assess stability.",
+    "metadata": {
+      "patient_id": "S002", 
+      "scan_date": "2023-09-10",
+      "language": "english"
+    }
+  },
+  {
+    "id": "simple_003",
+    "image_paths": ["ct_scan_t0.dcm", "ct_scan_t1.dcm"],
+    "findings": "左肺下叶见部分实性结节，大小约15mm，实性成分约40%，边界清楚。",
+    "comparison": "与半年前CT对比，结节整体增大3mm，实性成分增加。",
+    "impression": "左肺下叶部分实性结节，有增大趋势，建议进一步检查明确性质。",
+    "metadata": {
+      "patient_id": "S003",
+      "scan_date": "2023-08-20", 
+      "language": "chinese"
+    }
+  }
+]

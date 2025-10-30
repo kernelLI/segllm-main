@@ -1,0 +1,15 @@
+
+# LUNA16格式样本CT扫描数据
+# 每个扫描包含多个切片
+
+scan1:
+  - spacing: [1.0, 1.0, 1.0]
+  - origin: [0, 0, 0]
+  - dimensions: [512, 512, 100]
+  - nodules: 2
+  
+scan2:
+  - spacing: [0.8, 0.8, 1.5]
+  - origin: [0, 0, 0]
+  - dimensions: [512, 512, 120]
+  - nodules: 1

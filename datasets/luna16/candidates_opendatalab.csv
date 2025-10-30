@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" translate="no">
+  <head>
+<base href="/datasets/">
+    <base href="/" />
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="https://webpub.shlab.tech/dps/opendatalab-web/xlab_v5.2083/xlab.svg" />
+    <link rel="dns-prefetch preconnect" href="https://webpub.shlab.tech">
+    <link rel="dns-prefetch preconnect" href="https://static.openxlab.org.cn">
+    <link rel="dns-prefetch preconnect" href="https://at.alicdn.com">
+    <link rel="dns-prefetch preconnect" href="https://cdn-static.openxlab.org.cn">
+    <link rel="dns-prefetch preconnect" href="https://oss.openmmlab.com">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 maximum-scale=1.0" />
+    <title>OpenDataLab  引领AI大模型时代的开放数据平台</title>
+    <script type="module" crossorigin src="https://webpub.shlab.tech/dps/opendatalab-web/xlab_v5.2083/assets/index-bb41a696.js"></script>
+    <link rel="modulepreload" crossorigin href="https://webpub.shlab.tech/dps/opendatalab-web/xlab_v5.2083/assets/react-vendor-d21adf7d.js">
+    <link rel="modulepreload" crossorigin href="https://webpub.shlab.tech/dps/opendatalab-web/xlab_v5.2083/assets/library-7c3bf591.js">
+    <link rel="modulepreload" crossorigin href="https://webpub.shlab.tech/dps/opendatalab-web/xlab_v5.2083/assets/xlab-header-8b0972a2.js">
+    <link rel="stylesheet" href="https://webpub.shlab.tech/dps/opendatalab-web/xlab_v5.2083/assets/xlab-header-b3b33b77.css">
+    <link rel="stylesheet" href="https://webpub.shlab.tech/dps/opendatalab-web/xlab_v5.2083/assets/index-657a1d4b.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    
+    <script>
+      if (window.opener) {
+          const Dom = document.querySelector('div')
+          function queryURLParameter(str) {
+              var reg = /([^?&=]+)=([^?&=]+)/g,
+                  obj = {}
+              str.replace(reg, function () {
+                  obj[arguments[1]] = arguments[2]
+              })
+              return obj
+          }
+          let query = queryURLParameter(window.location.href)
+          // TIP： githubUpload由于跳转的回掉/datasets?.code=,（接口没有处理授权成功redirect逻辑）可判断回掉
+          const isGithubUploadJumpFrom = query?.method === 'githubUpload' || window?.location.href?.includes('?code=');
+          console.log('postMessage', isGithubUploadJumpFrom, query, document?.referrer, query?.method)
+          if(isGithubUploadJumpFrom) {
+              window.opener.postMessage(query,'*')
+              window.opener = null
+              window.close()
+          }
+
+      }
+  </script>
+  </body>
+</html>
