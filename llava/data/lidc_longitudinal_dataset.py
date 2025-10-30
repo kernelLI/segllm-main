@@ -325,25 +325,38 @@ class LIDCLongitudinalDataset(Dataset):
         return len(self.conversations)
     
     def __getitem__(self, idx):
-        """获取数据项 - 返回路径列表格式"""
+        """获取样本数据"""
         max_retries = 10
-        original_idx = idx
+        current_idx = idx
         
-        for retry in range(max_retries):
+        for attempt in range(max_retries):
             try:
-                conv = self.conversations[idx]
+                # 获取配对数据
+                conv = self.conversations[current_idx]
                 
                 if self.is_inference:
                     # 推理模式直接返回处理后的数据
                     return conv
                 
-                # 训练模式返回路径列表 - SegLLM期望的格式
-                # 加载目标掩码（这里仍需加载，因为需要验证数据有效性）
+                # 加载目标掩码
                 target_mask = self._load_mask(conv["masks"]["target"])
-
+                
+                # 检查数据有效性
+                if target_mask is None:
+                    logging.warning(f"Invalid mask for sample {current_idx}, trying next sample")
+                    current_idx = (current_idx + 1) % len(self.conversations)
+                    continue
+                
                 # 加载t0/t1并生成变化热图与HU缓存
                 img_t0, hu_t0 = self._load_ct_image(conv["image"][0])
                 img_t1, hu_t1 = self._load_ct_image(conv["image"][1])
+                
+                # 检查图像有效性
+                if img_t0 is None or img_t1 is None or hu_t0 is None or hu_t1 is None:
+                    logging.warning(f"Invalid CT images for sample {current_idx}, trying next sample")
+                    current_idx = (current_idx + 1) % len(self.conversations)
+                    continue
+                
                 delta_hu = hu_t1 - hu_t0
                 heatmap = np.clip((delta_hu + 200) / 400 * 255, 0, 255).astype(np.uint8)
 
@@ -353,21 +366,22 @@ class LIDCLongitudinalDataset(Dataset):
                     "masks": target_mask,
                     "conversations": conv["conversations"],
                     "metadata": conv["metadata"],
-                    "hu_t0": hu_t0,          # 新增：原始HU
-                    "hu_t1": hu_t1,          # 新增：原始HU
-                    "change_heatmap": heatmap # 新增：变化热图
+                    "hu_t0": hu_t0,          # 原始HU
+                    "hu_t1": hu_t1,          # 原始HU
+                    "change_heatmap": heatmap # 变化热图
                 }
                 
                 return data_dict
                 
             except Exception as e:
-                logger.error(f"Error loading sample {idx} (retry {retry + 1}/{max_retries}): {str(e)}")
-                idx = (idx + 1) % len(self)
-                if retry == max_retries - 1:
-                    logger.error(f"Failed to load any valid sample after {max_retries} retries, returning None")
-                    return None  # 返回None让collate_fn过滤
+                logging.warning(f"Error loading sample {current_idx}: {e}")
+                # 尝试下一个样本
+                current_idx = (current_idx + 1) % len(self.conversations)
+                
+                # 如果是最后一个尝试，返回None让collate_fn处理
+                if attempt == max_retries - 1:
+                    return None
         
-        # 不应该到达这里，但为了安全起见
         return None
     
     def collate_fn(self, batch):

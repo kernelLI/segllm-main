@@ -195,21 +195,22 @@ class LongitudinalSegmentationMetrics(nn.Module):
     ) -> float:
         """计算条件一致性 - 预测结果是否符合文本条件"""
         
-        # 解析文本条件
-        condition_satisfied = self._parse_condition(condition_text, change_metrics)
-        
-        # 计算预测是否满足条件
-        pred_satisfies = self._check_prediction_satisfies_condition(pred, condition_text)
-        
-        # 计算一致性
-        if condition_satisfied and pred_satisfies:
-            consistency = 1.0
-        elif not condition_satisfied and not pred_satisfies:
-            consistency = 1.0
-        else:
-            consistency = 0.0
-        
-        return consistency
+        try:
+            # 检查预测是否满足条件
+            pred_satisfies = self._check_prediction_satisfies_condition(pred, condition_text, change_metrics)
+            
+            # 检查真实标签是否满足条件
+            target_satisfies = self._check_prediction_satisfies_condition(target, condition_text, change_metrics)
+            
+            # 如果预测和真实标签在条件满足性上一致，则返回1.0
+            if pred_satisfies == target_satisfies:
+                return 1.0
+            else:
+                return 0.0
+                
+        except Exception as e:
+            logging.warning(f"Error computing condition consistency: {e}")
+            return 0.0
     
     def _parse_condition(self, condition_text: str, change_metrics: Dict[str, float]) -> bool:
         """解析条件文本并判断是否满足"""
@@ -245,12 +246,82 @@ class LongitudinalSegmentationMetrics(nn.Module):
         # 默认返回True
         return True
     
-    def _check_prediction_satisfies_condition(self, pred: Tensor, condition_text: str) -> bool:
-        """检查预测是否满足条件"""
+    def _check_prediction_satisfies_condition(self, pred: Tensor, condition_text: str, 
+                                             change_metrics: Dict[str, float] = None) -> bool:
+        """检查预测是否满足条件
         
-        # 简化的实现：如果有预测结果，则认为满足条件
-        # 可以根据具体条件进行更复杂的判断
-        return pred.sum().item() > 0
+        Args:
+            pred: 预测掩码 [H, W, D]
+            condition_text: 条件文本
+            change_metrics: 变化指标字典
+            
+        Returns:
+            是否满足条件
+        """
+        if change_metrics is None:
+            change_metrics = {}
+            
+        # 解析条件并验证
+        condition_info = self._extract_condition_from_text(condition_text)
+        
+        if condition_info["type"] == "volume_threshold":
+            # 体积阈值条件：检查预测区域的体积变化是否满足阈值
+            pred_volume = pred.sum().item()
+            threshold = condition_info.get("threshold", 25.0)
+            
+            # 获取真实体积变化（如果可用）
+            actual_volume_change = change_metrics.get("volume_change_percent", 0)
+            
+            # 如果预测有体积且真实变化满足阈值，则认为条件满足
+            if pred_volume > 0 and actual_volume_change >= threshold:
+                return True
+            elif pred_volume == 0 and actual_volume_change < threshold:
+                return True
+            else:
+                return False
+                
+        elif condition_info["type"] == "new_lesion":
+            # 新发病灶条件：检查预测是否标识了新发病灶
+            is_new = change_metrics.get("is_new_lesion", False)
+            pred_positive = pred.sum().item() > 0
+            
+            # 预测和真实标签一致
+            return pred_positive == is_new
+            
+        elif condition_info["type"] == "density_change":
+            # 密度变化条件：检查密度变化是否满足要求
+            density_change = change_metrics.get("density_change_hu", 0)
+            pred_positive = pred.sum().item() > 0
+            
+            # 简化的密度条件检查
+            if "增加" in condition_text and density_change > 50:
+                return pred_positive
+            elif "减少" in condition_text and density_change < -50:
+                return pred_positive
+            else:
+                return not pred_positive  # 如果没有显著变化，预测应该为负
+                
+        elif condition_info["type"] == "combined_attributes":
+            # 多属性组合条件
+            volume_change = change_metrics.get("volume_change_percent", 0)
+            density_change = change_metrics.get("density_change_hu", 0)
+            pred_positive = pred.sum().item() > 0
+            
+            # 检查是否同时满足体积和密度条件
+            vol_threshold = condition_info.get("volume_threshold", 20.0)
+            dens_threshold = condition_info.get("density_threshold", 150.0)
+            
+            meets_volume = volume_change >= vol_threshold
+            meets_density = density_change >= dens_threshold
+            actual_meets_both = meets_volume and meets_density
+            
+            return pred_positive == actual_meets_both
+            
+        else:
+            # 默认情况：如果有预测结果且真实条件满足，则认为满足
+            pred_positive = pred.sum().item() > 0
+            actual_condition_met = change_metrics.get("condition_met", True)
+            return pred_positive == actual_condition_met
     
     def compute_threshold_accuracy(
         self,
@@ -344,11 +415,15 @@ class LongitudinalSegmentationMetrics(nn.Module):
                 elif metric_type == "condition_consistency":
                     value = self.compute_condition_consistency(pred, target, condition_text, change_metrics)
                 elif metric_type == "threshold_accuracy":
-                    volume_change = change_metrics.get("volume_change_percent", 0)
-                    value = self.compute_threshold_accuracy(volume_change, volume_change)
+                    # 获取预测和真实的体积变化
+                    pred_volume_change = change_metrics.get("pred_volume_change_percent", 0)
+                    target_volume_change = change_metrics.get("volume_change_percent", 0)
+                    value = self.compute_threshold_accuracy(pred_volume_change, target_volume_change)
                 elif metric_type == "progression_classification":
-                    volume_change = change_metrics.get("volume_change_percent", 0)
-                    prog_dict = self.compute_progression_classification(volume_change, volume_change)
+                    # 获取预测和真实的体积变化
+                    pred_volume_change = change_metrics.get("pred_volume_change_percent", 0)
+                    target_volume_change = change_metrics.get("volume_change_percent", 0)
+                    prog_dict = self.compute_progression_classification(pred_volume_change, target_volume_change)
                     value = prog_dict["progression_classification_accuracy"]
                 else:
                     value = 0.0

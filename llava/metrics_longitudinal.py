@@ -173,7 +173,7 @@ class ChangeCalculator:
             
             # 计算等效直径（假设球形）
             volume = largest_region.area * np.prod(self.voxel_spacing)
-            equivalent_diameter = 2 * ((3 * volume) / (4 * np.pi)) ** (1/3)
+            equivalent_diameter = 2 * ((3 * volume) / (4 * np.pi) + 1e-6) ** (1/3)  # 添加除零保护
             
             return equivalent_diameter
         
@@ -223,7 +223,7 @@ class ChangeCalculator:
             
             # 计算边界处的梯度
             grad_z, grad_y, grad_x = np.gradient(ct)
-            gradient_magnitude = np.sqrt(grad_z**2 + grad_y**2 + grad_x**2)
+            gradient_magnitude = np.sqrt(grad_z**2 + grad_y**2 + grad_x**2 + 1e-6)  # 添加除零保护
             
             # 边界区域的平均梯度
             boundary_gradient = np.mean(gradient_magnitude[boundary > 0])
@@ -280,7 +280,7 @@ class ChangeCalculator:
             boundary_t1 = ndimage.laplace(mask_t1.astype(float))
             boundary_length_t0 = np.sum(np.abs(boundary_t0))
             boundary_length_t1 = np.sum(np.abs(boundary_t1))
-            texture_change_score = abs(boundary_length_t1 - boundary_length_t0) / max(boundary_length_t0, 1)
+            texture_change_score = abs(boundary_length_t1 - boundary_length_t0) / max(boundary_length_t0, 1e-6)  # 改为更小的值
         else:
             spatial_shift_mm = 0.0
             texture_change_score = 0.0
