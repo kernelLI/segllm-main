@@ -1,0 +1,155 @@
+# LIDC纵向数据配置文件
+# 支持注释的YAML格式
+
+model:
+  model_name_or_path: "llava-med"
+  vision_tower: "openai/clip-vit-large-patch14"
+  segmentator_path: "sam-med"
+  use_longitudinal: true
+  longitudinal_config:
+    feature_fusion_method: "concatenation"
+    change_projector_dim: 512
+    enable_difference_features: true
+
+data:
+  data_path: "data/lidc_longitudinal"
+  image_folder: "data/lidc_ct_images"
+  voxel_spacing: [1.0, 1.0, 1.0]
+  image_size: [256, 256, 64]
+  ct_windows:
+    - center: -600
+      width: 1500
+    - center: 40
+      width: 400
+    - center: 100
+      width: 50
+  cache_raw_hu: true
+  change_heatmap: true
+  normalization:
+    clip_range: [-1000, 400]
+  augmentation:
+    enabled: true
+    rotation_range: [-5, 5]
+    translation_range: [-10, 10]
+    scaling_range: [0.9, 1.1]
+    noise_std: 10.0
+  
+  # 纵向数据生成器配置 - 支持注释说明
+  longitudinal_data_generator:
+    density_threshold: 50.0              # 密度阈值(HU)，结节检测最小密度
+    min_nodule_volume: 30.0              # 最小结节体积(mm³)，过滤小结节
+    max_followup_days: 730               # 最大随访天数，筛选时间间隔
+    seed: 42                             # 随机种子，保证结果可重复
+    enable_registration: true            # 是否启用图像配准
+    
+    # 配准配置参数
+    registration_config:
+      iou_threshold: 0.3                 # IoU阈值，匹配重叠度要求(对应DEFAULT_IOU_THRESHOLD)
+      distance_threshold: 30.0         # 距离阈值(mm)，空间匹配容差
+      morphological_weight: 0.3          # 形态学特征权重
+      temporal_weight: 0.2              # 时间特征权重
+    
+    image_template_size: 256             # 图像模板大小(对应IMAGE_TEMPLATE_SIZE)
+    match_score_threshold: 0.3           # 匹配分数阈值(对应MATCH_SCORE_THRESHOLD)
+    spatial_distance_norm: 50.0       # 空间距离归一化因子(对应SPATIAL_DISTANCE_NORM)
+
+training:
+  num_train_epochs: 15
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 8
+  learning_rate: 2.0e-05
+  weight_decay: 0.01
+  warmup_ratio: 0.03
+  lr_scheduler_type: "cosine"
+  fp16: true
+  dataloader_num_workers: 4
+  remove_unused_columns: false
+  eval_steps: 500
+  save_steps: 500
+  logging_steps: 10
+  save_total_limit: 3
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+  greater_is_better: false
+
+longitudinal_tasks:
+  task_weights:
+    volume_threshold: 0.3
+    new_lesion: 0.25
+    density_change: 0.25
+    combined_attributes: 0.2
+  change_thresholds:
+    volume_increase: 25.0
+    volume_decrease: 20.0
+    density_change: 50.0
+    margin_blur: 0.3
+    diameter_change: 2.0
+  instruction_templates:
+    volume_threshold:
+      templates:
+        - "[SEG] 分割所有较上次体积{change_direction}{threshold}%的结节"
+        - "[SEG] 找出体积{change_direction}{threshold}%的病灶"
+        - "[SEG] 标出体积变化{change_direction}{threshold}%的结节"
+      thresholds: [20, 25, 30, 40, 50]
+    new_lesion:
+      templates:
+        - "[SEG] 标出{lesion_type}的{lesion_subtype}结节"
+        - "[SEG] 找出{lesion_type}的病灶"
+        - "[SEG] 圈出{lesion_type}的{lesion_subtype}阴影"
+      lesion_types: ["新出现", "新发"]
+      lesion_subtypes: ["磨玻璃", "实性", "部分实性"]
+    density_change:
+      templates:
+        - "[SEG] 圈出{change_type}的病灶"
+        - "[SEG] 标出密度{change_type}的结节"
+        - "[SEG] 找出{change_type}的阴影"
+      change_types: ["从磨玻璃变实性", "从实性变磨玻璃", "边界由清晰变模糊"]
+    combined_attributes:
+      templates:
+        - "[SEG] 分割{condition_desc}的结节"
+        - "[SEG] 找出{condition_desc}的病灶"
+        - "[SEG] 标出{condition_desc}的阴影"
+      conditions:
+        - "体积增加≥20%且密度≥150HU"
+        - "体积增加≥25%且边界变模糊"
+        - "密度增加≥50HU且直径增大≥2mm"
+
+evaluation:
+  metrics:
+    - "dice"
+    - "hausdorff_95"
+    - "condition_consistency"
+    - "volume_change_accuracy"
+    - "density_change_accuracy"
+    - "new_lesion_detection_f1"
+  eval_datasets: ["lidc_longitudinal_val", "lidc_longitudinal_test"]
+  eval_batch_size: 1
+  save_predictions: true
+  visualization:
+    enabled: true
+    save_dir: "eval_visualizations"
+    formats: ["png", "nifti"]
+    include_change_heatmap: true
+
+logging:
+  log_level: "INFO"
+  save_logs: true
+  log_dir: "logs"
+  tensorboard:
+    enabled: true
+    log_dir: "runs/longitudinal_lidc"
+  wandb:
+    enabled: false
+    project: "segllm-longitudinal"
+    entity: null
+    tags: ["lidc", "longitudinal", "reasoning"]
+
+hardware:
+  gpu_memory_fraction: 0.9
+  mixed_precision: true
+  compile_model: false
+  distributed:
+    enabled: false
+    backend: "nccl"
+    find_unused_parameters: false

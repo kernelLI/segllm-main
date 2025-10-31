@@ -29,7 +29,7 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import Dataset
 import numpy as np
-import json
+import yaml
 import os
 from PIL import Image
 import nibabel as nib
@@ -99,13 +99,24 @@ class LIDCLongitudinalDataset(Dataset):
         """加载纵向样本数据"""
         samples = []
         
-        # 加载数据集描述文件
-        meta_file = os.path.join(self.data_path, "longitudinal_pairs.json")
-        if not os.path.exists(meta_file):
-            raise FileNotFoundError(f"Meta file not found: {meta_file}")
+        # 优先查找YAML格式文件，回退到JSON格式
+        meta_file = None
+        for ext in ['.yaml', '.yml', '.json']:
+            candidate_file = os.path.join(self.data_path, f"longitudinal_pairs{ext}")
+            if os.path.exists(candidate_file):
+                meta_file = candidate_file
+                break
+        
+        if not meta_file:
+            raise FileNotFoundError(f"Meta file not found: longitudinal_pairs.(yaml|yml|json) in {self.data_path}")
             
-        with open(meta_file, 'r') as f:
-            meta_data = json.load(f)
+        with open(meta_file, 'r', encoding='utf-8') as f:
+            if meta_file.endswith(('.yaml', '.yml')):
+                meta_data = yaml.safe_load(f)
+            else:
+                # 回退到JSON格式（兼容旧数据）
+                import json
+                meta_data = json.load(f)
             
         for patient_data in meta_data:
             sample = LongitudinalSample(

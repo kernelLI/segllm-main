@@ -1,0 +1,67 @@
+# LIDC-IDRI纵向数据配对文件
+# 该文件定义了纵向研究中同一患者的基线(T0)和随访(T1)扫描配对
+# 
+# 文件结构说明：
+# - patient_id: 患者唯一标识符
+# - study_t0: 基线扫描研究ID
+# - study_t1: 随访扫描研究ID  
+# - image_t0: 基线CT图像相对路径
+# - image_t1: 随访CT图像相对路径
+# - mask_t0: 基线结节掩码相对路径
+# - mask_t1: 随访结节掩码相对路径
+# - nodules: 结节列表，包含每个结节的详细变化信息
+#
+# 结节信息结构：
+# - id: 结节唯一标识符
+# - mask_t0_path: 基线结节掩码路径（相对路径）
+# - mask_t1_path: 随访结节掩码路径（相对路径）
+# - volume_change_percent: 体积变化百分比（负值表示体积减小）
+# - density_change: 密度变化（HU值变化）
+# - is_new: 是否为新增结节（布尔值）
+# - is_resolved: 是否为消退结节（布尔值）
+
+- patient_id: "LIDC-IDRI-0001"
+  study_t0: "1.3.6.1.4.1.14519.5.2.1.6279.6001.298806137288633453246975630178"
+  study_t1: "1.3.6.1.4.1.14519.5.2.1.6279.6001.179049373636438705059720603842"
+  image_t0: "images/LIDC-IDRI-0001_baseline.nii.gz"
+  image_t1: "images/LIDC-IDRI-0001_followup.nii.gz"
+  mask_t0: "masks/LIDC-IDRI-0001_baseline_mask.nii.gz"
+  mask_t1: "masks/LIDC-IDRI-0001_followup_mask.nii.gz"
+  nodules:
+    - id: "nodule_001"
+      mask_t0_path: "masks/nodules/LIDC-IDRI-0001_nodule_001_t0.nii.gz"
+      mask_t1_path: "masks/nodules/LIDC-IDRI-0001_nodule_001_t1.nii.gz"
+      volume_change_percent: 35.2
+      density_change: 180.5
+      is_new: false
+      is_resolved: false
+    - id: "nodule_002"
+      mask_t0_path: "masks/nodules/LIDC-IDRI-0001_nodule_002_t0.nii.gz"
+      mask_t1_path: "masks/nodules/LIDC-IDRI-0001_nodule_002_t1.nii.gz"
+      volume_change_percent: -15.8
+      density_change: -45.3
+      is_new: false
+      is_resolved: false
+
+- patient_id: "LIDC-IDRI-0002"
+  study_t0: "1.3.6.1.4.1.14519.5.2.1.6279.6001.300197288370912650156286243740"
+  study_t1: "1.3.6.1.4.1.14519.5.2.1.6279.6001.226669952126951818849929970016"
+  image_t0: "images/LIDC-IDRI-0002_baseline.nii.gz"
+  image_t1: "images/LIDC-IDRI-0002_followup.nii.gz"
+  mask_t0: "masks/LIDC-IDRI-0002_baseline_mask.nii.gz"
+  mask_t1: "masks/LIDC-IDRI-0002_followup_mask.nii.gz"
+  nodules:
+    - id: "nodule_001"
+      mask_t0_path: "masks/nodules/LIDC-IDRI-0002_nodule_001_t0.nii.gz"
+      mask_t1_path: "masks/nodules/LIDC-IDRI-0002_nodule_001_t1.nii.gz"
+      volume_change_percent: 22.1
+      density_change: 95.7
+      is_new: false
+      is_resolved: false
+    - id: "nodule_003"
+      mask_t0_path: ""  # 新增结节，基线无对应掩码
+      mask_t1_path: "masks/nodules/LIDC-IDRI-0002_nodule_003_t1.nii.gz"
+      volume_change_percent: 100.0
+      density_change: 320.8
+      is_new: true
+      is_resolved: false
