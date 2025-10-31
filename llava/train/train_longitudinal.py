@@ -3,7 +3,7 @@ LIDC-IDRI纵向推理分割任务训练脚本
 支持双时相CT图像输入和变化推理
 
 输入:
-- data_path: 训练数据路径，包含longitudinal_pairs.yaml元数据文件
+- data_path: 训练数据路径，包含longitudinal_pairs.json元数据文件
 - image_folder: CT图像文件夹路径
 - model_name_or_path: 预训练模型路径或HuggingFace模型ID
 - task_weights: 任务权重字典，控制四种任务类型的采样比例
@@ -368,9 +368,22 @@ def create_model_and_tokenizer(args):
     
     return model, tokenizer
 
+def load_config_from_yaml(config_path: str) -> Dict:
+    """从YAML配置文件加载参数"""
+    import yaml
+    
+    with open(config_path, 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+    
+    return config
+
 def main():
     """主函数"""
-    # 解析参数
+    # 加载配置文件
+    config_path = "configs/longitudinal_lidc_config.yaml"
+    config = load_config_from_yaml(config_path)
+    
+    # 解析训练参数
     args = LongitudinalTrainingArguments()
     
     # 创建输出目录
@@ -398,8 +411,37 @@ def main():
     class DataArguments:
         max_seq_length: int = 2048
         image_token_len: int = 256
+        ct_windows: list = field(default_factory=list)
+        image_size: int = 256
         
-    data_args = DataArguments()
+    # 从配置文件获取CT窗参数和图像尺寸
+    data_config = config.get('data', {})
+    ct_windows_config = data_config.get('ct_windows', [
+        {"center": -600, "width": 1500},
+        {"center": 40, "width": 400}, 
+        {"center": 100, "width": 50}
+    ])
+    
+    # 将center/width格式转换为min/max格式
+    ct_windows = []
+    for window in ct_windows_config:
+        center = window['center']
+        width = window['width']
+        min_val = center - width // 2
+        max_val = center + width // 2
+        ct_windows.append([min_val, max_val])
+    
+    # 获取图像尺寸（使用配置文件中image_size的前两维作为2D尺寸）
+    image_size_config = data_config.get('image_size', [256, 256, 64])
+    if isinstance(image_size_config, list) and len(image_size_config) >= 2:
+        image_size = image_size_config[0]  # 使用第一维作为2D图像尺寸
+    else:
+        image_size = 256
+    
+    data_args = DataArguments(
+        ct_windows=ct_windows,
+        image_size=image_size
+    )
     
     train_dataset = LongitudinalDataset(
         args.data_path,

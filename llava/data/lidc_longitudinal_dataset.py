@@ -74,11 +74,15 @@ class LIDCLongitudinalDataset(Dataset):
         self.image_processor = image_processor
         self.is_inference = is_inference
         self.inference_conv = inference_conv
-        self.ct_window_center = ct_window_center  # 配置化CT窗参数
-        self.ct_window_width = ct_window_width
+        # 使用已配置的CT窗参数
+        self.ct_windows = data_args.ct_windows
         
         # 从配置文件中获取图像尺寸，默认为256x256
-        self.image_size = getattr(data_args, 'image_size', [256, 256, 64])[:2]
+        # 注意：使用2D尺寸，忽略Z维度
+        if hasattr(data_args, 'image_size') and isinstance(data_args.image_size, (list, tuple)):
+            self.image_size = data_args.image_size[:2]  # 只取前两个维度
+        else:
+            self.image_size = [256, 256]  # 默认2D尺寸
         self.default_height, self.default_width = self.image_size
         
         # 加载数据集元信息
@@ -208,6 +212,18 @@ class LIDCLongitudinalDataset(Dataset):
             density_change = nodule.get("density_change", 0)
             
             if abs(density_change) > 50:  # HU值变化超过50
+                # 根据密度变化类型生成不同的指令
+                if density_change > 50:  # 密度增加
+                    if density_change > 150:  # 显著增加，可能是磨玻璃变实性
+                        instruction = f"[IMAGE256:{sample.image_t0_path}] [IMAGE256:{sample.image_t1_path}] 圈出从磨玻璃变实性的病灶"
+                    else:  # 中等程度增加
+                        instruction = f"[IMAGE256:{sample.image_t0_path}] [IMAGE256:{sample.image_t1_path}] 标出密度增加超过{density_change:.0f}HU的结节"
+                else:  # 密度减少
+                    if density_change < -150:  # 显著减少，可能是实性变磨玻璃
+                        instruction = f"[IMAGE256:{sample.image_t0_path}] [IMAGE256:{sample.image_t1_path}] 找出从实性变磨玻璃的病灶"
+                    else:  # 中等程度减少
+                        instruction = f"[IMAGE256:{sample.image_t0_path}] [IMAGE256:{sample.image_t1_path}] 标出密度减少超过{abs(density_change):.0f}HU的结节"
+                
                 templates.append({
                     "task_id": f"t3_density_{nodule['id']}",
                     "task_type": "density_change",
@@ -216,7 +232,7 @@ class LIDCLongitudinalDataset(Dataset):
                     "conversations": [
                         {
                             "from": "human",
-                            "value": f"[IMAGE256:{sample.image_t0_path}] [IMAGE256:{sample.image_t1_path}] 圈出从磨玻璃变实性的病灶"
+                            "value": instruction
                         },
                         {
                             "from": "gpt", 
@@ -230,7 +246,42 @@ class LIDCLongitudinalDataset(Dataset):
             vol_change = nodule.get("volume_change_percent", 0)
             density_change = nodule.get("density_change", 0)
             
+            # 定义多种组合条件
+            conditions = []
+            
+            # 条件1: 体积增加 + 密度增加
             if vol_change >= 20 and density_change >= 150:
+                conditions.append({
+                    "desc": "体积增加≥20%且密度≥150HU",
+                    "priority": 1
+                })
+            
+            # 条件2: 体积显著增加 + 密度中等增加
+            if vol_change >= 50 and density_change >= 100:
+                conditions.append({
+                    "desc": "体积增加≥50%且密度增加≥100HU",
+                    "priority": 2
+                })
+            
+            # 条件3: 体积减少 + 密度减少（可能为治疗响应）
+            if vol_change <= -30 and density_change <= -100:
+                conditions.append({
+                    "desc": f"体积减少≥30%且密度减少≥{abs(density_change):.0f}HU",
+                    "priority": 3
+                })
+            
+            # 条件4: 体积稳定但密度显著变化
+            if -10 <= vol_change <= 10 and abs(density_change) >= 200:
+                change_type = "增加" if density_change > 0 else "减少"
+                conditions.append({
+                    "desc": f"体积稳定但密度{change_type}≥{abs(density_change):.0f}HU",
+                    "priority": 4
+                })
+            
+            # 选择最高优先级的条件生成任务
+            if conditions:
+                best_condition = min(conditions, key=lambda x: x["priority"])
+                
                 templates.append({
                     "task_id": f"t4_combined_{nodule['id']}",
                     "task_type": "combined_attributes",
@@ -242,7 +293,7 @@ class LIDCLongitudinalDataset(Dataset):
                     "conversations": [
                         {
                             "from": "human",
-                            "value": f"[IMAGE256:{sample.image_t0_path}] [IMAGE256:{sample.image_t1_path}] 分割体积增加≥20%且密度≥150HU的结节"
+                            "value": f"[IMAGE256:{sample.image_t0_path}] [IMAGE256:{sample.image_t1_path}] 分割{best_condition['desc']}的结节"
                         },
                         {
                             "from": "gpt",
@@ -267,14 +318,8 @@ class LIDCLongitudinalDataset(Dataset):
             else:
                 hu_slice = ct_data.astype(np.float32)
 
-            # 读配置：优先用新字段 ct_windows，否则回退旧字段
-            if hasattr(self, 'ct_windows') and self.ct_windows:
-                windows = self.ct_windows
-            else:
-                # 回退旧字段（单窗转列表）
-                wc = getattr(self, 'ct_window_center', -600)
-                ww = getattr(self, 'ct_window_width', 1500)
-                windows = [{'center': wc, 'width': ww}]
+            # 使用已配置的CT窗参数
+            windows = self.ct_windows
 
             # 强制3窗
             ch_list = []
