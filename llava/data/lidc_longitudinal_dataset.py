@@ -3,7 +3,7 @@ SegLLM纵向推理分割数据集
 LIDC-IDRI纵向推理分割数据集，支持双时相CT输入和变化推理任务
 
 输入:
-- data_path: 数据集根目录路径，包含longitudinal_pairs.json元数据文件和图像文件
+- data_path: 数据集根目录路径，包含longitudinal_pairs.yaml元数据文件和图像文件
 - tokenizer: 文本分词器，用于处理对话文本
 - data_args: 数据参数对象，包含image_size等配置信息
 - image_processor: 图像处理器，用于图像预处理
@@ -99,24 +99,19 @@ class LIDCLongitudinalDataset(Dataset):
         """加载纵向样本数据"""
         samples = []
         
-        # 优先查找YAML格式文件，回退到JSON格式
+        # 只使用YAML格式文件
         meta_file = None
-        for ext in ['.yaml', '.yml', '.json']:
+        for ext in ['.yaml', '.yml']:
             candidate_file = os.path.join(self.data_path, f"longitudinal_pairs{ext}")
             if os.path.exists(candidate_file):
                 meta_file = candidate_file
                 break
         
         if not meta_file:
-            raise FileNotFoundError(f"Meta file not found: longitudinal_pairs.(yaml|yml|json) in {self.data_path}")
+            raise FileNotFoundError(f"未找到YAML格式的配对文件: longitudinal_pairs.yaml/yml in {self.data_path}")
             
         with open(meta_file, 'r', encoding='utf-8') as f:
-            if meta_file.endswith(('.yaml', '.yml')):
-                meta_data = yaml.safe_load(f)
-            else:
-                # 回退到JSON格式（兼容旧数据）
-                import json
-                meta_data = json.load(f)
+            meta_data = yaml.safe_load(f)
             
         for patient_data in meta_data:
             sample = LongitudinalSample(

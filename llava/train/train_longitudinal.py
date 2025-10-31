@@ -3,7 +3,7 @@ LIDC-IDRI纵向推理分割任务训练脚本
 支持双时相CT图像输入和变化推理
 
 输入:
-- data_path: 训练数据路径，包含longitudinal_pairs.json元数据文件
+- data_path: 训练数据路径，包含longitudinal_pairs.yaml元数据文件
 - image_folder: CT图像文件夹路径
 - model_name_or_path: 预训练模型路径或HuggingFace模型ID
 - task_weights: 任务权重字典，控制四种任务类型的采样比例
